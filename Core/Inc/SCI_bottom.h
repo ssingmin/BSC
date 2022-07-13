@@ -8,6 +8,11 @@
 #ifndef INC_SCI_BOTTOM_H_
 #define INC_SCI_BOTTOM_H_
 
+#include "define.h"
+
+extern CAN_RxHeaderTypeDef 	g_tCan_Rx_Header;
+
+
 void spinonce(void);
 
 

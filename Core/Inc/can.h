@@ -11,6 +11,7 @@
 #include "main.h"
 #include "stm32f7xx_hal_can.h"
 
+
 extern CAN_HandleTypeDef hcan1;
 
 void CanInit(uint32_t id, uint32_t mask);
