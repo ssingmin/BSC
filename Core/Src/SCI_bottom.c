@@ -295,6 +295,7 @@ void spinonce(void)
             	parseEnc(canbuf);
                 break;
             case MOTOR114_RES_ID:
+
 //                if(msg.data[1] == 0x6c && msg.data[2] == 0x60)
 //                    parseEnc114(msg);
 //                if(msg.data[1] == 0x3f && msg.data[2] == 0x60)
