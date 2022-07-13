@@ -27,7 +27,9 @@ uint32_t send2003 = 0;
 
 uint32_t controlmotor_seq = 0;
 
-
+uint8_t motor_sw;
+int motor_break;
+int motor_disable_flag;
 
 uint32_t USS_start = 0;
 uint32_t USS_end = 0;
@@ -54,6 +56,64 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
     	USS_end = gTick;
     }
 
+}
+
+void controlMotor()
+{
+    static int count = 0;
+    if(motor_sw)
+    {
+        if(motor_disable_flag)
+        {
+            enable();
+            motor_disable_flag = 0;
+        }
+        if(motor_break == 1)
+        {
+            control((int)motor->cmd_motor_rpm_left,(int)motor->cmd_motor_rpm_right);
+            motor_break = 2;
+            count = 0;
+        }
+        else if(motor_break == 2)
+        {
+            count ++;
+            control((int)motor->cmd_motor_rpm_left,(int)motor->cmd_motor_rpm_right);
+            if(count == 20)
+                motor_break = 3;
+
+        }
+        else if(motor_break == 3)
+        {
+            control(0,0);
+            count = 0;
+        }
+    }
+    else
+    {
+        disable();
+        motor_disable_flag = 1;
+    }
+}
+
+
+int toRPM()
+{
+    motor->cmd_motor_rpm_right = (60/(2*Math_PI*WHEEL_RADIUS)) * (motor->cmd_v + (WHEEL_DISTANCE/2)*motor->cmd_w);
+    motor->cmd_motor_rpm_left = (60/(2*Math_PI*WHEEL_RADIUS)) * (motor->cmd_v - (WHEEL_DISTANCE/2)*motor->cmd_w);
+    return 0;
+}
+
+void parseCmdvel(uint8_t *msg)
+{
+    /*cmd_v lower/cmd_v upper/cmd_w lower/cmd_w upper/ x / x / x / x */
+    int16_t temp;
+    temp = ((int16_t)msg[0]|(int16_t)msg[1]<<8);
+    motor->cmd_v = (double)temp/SIGNIFICANT_FIGURES;
+    temp = ((int16_t)msg[2]|(int16_t)msg[3]<<8);
+    motor->cmd_w = (double)temp/SIGNIFICANT_FIGURES;
+    motor_sw = msg[4];
+    toRPM();
+    motor_break = 1;
 }
 
 
@@ -113,6 +173,29 @@ void parseEnc(uint8_t *msg)
     }
 }
 
+void parseEnc114(uint8_t *msg)
+{
+        int16_t rrpm,lrpm;
+        lrpm = (int16_t)msg[4] | ((int16_t)msg[5]<<8);
+        rrpm = (int16_t)msg[6] | ((int16_t)msg[7]<<8);
+
+        motor->LRPM = (-lrpm) / 10.0;
+        motor->RRPM = (rrpm) / 10.0;
+
+        toVW();
+}
+
+void parseState114(uint8_t *msg)
+{
+    sensor_state->motor[0] = (int16_t)msg[4] | ((int16_t)msg[5]<<8);
+    sensor_state->motor[1] = (int16_t)msg[6] | ((int16_t)msg[7]<<8);
+    if(!(sensor_state->motor[0] == 0x00 && sensor_state->motor[1] == 0x00))
+    {
+        reset();
+        startMotor();
+    }
+}
+
 void spinonce(void)
 {
 
@@ -120,13 +203,13 @@ void spinonce(void)
 	uint8_t buf[8];
     int index = 0;
     int tmpindex = 0;
-    int16_t temp;
+
     uint32_t CanId = 0;
     uint8_t motor_sw = 0;
     static int count = 0;
 
-    int motor_disable_flag;
-    int motor_break;
+
+
 
 	double cmd_motor_rpm_left;
 	double cmd_motor_rpm_right;
@@ -147,39 +230,7 @@ void spinonce(void)
     	if(gTick>controlmotor_seq+4) {		//about controlmotor do it!!!!!
     		controlmotor_seq = Tick_100ms;
 
-    		    if(motor_sw)
-    		    {
-    		        if(motor_disable_flag)
-    		        {
-    		            enable();
-    		            motor_disable_flag = 0;
-    		        }
-    		        if(motor_break == 1)
-    		        {
-    		            control((int)cmd_motor_rpm_left,(int)cmd_motor_rpm_right);
-    		            motor_break = 2;
-    		            count = 0;
-    		        }
-    		        else if(motor_break == 2)
-    		        {
-    		            count ++;
-    		            control((int)cmd_motor_rpm_left,(int)cmd_motor_rpm_right);
-    		            if(count == 20)
-    		                motor_break = 3;
-
-    		        }
-    		        else if(motor_break == 3)
-    		        {
-    		            control(0,0);
-    		            count = 0;
-    		        }
-    		    }
-    		    else
-    		    {
-    		        disable();
-    		        motor_disable_flag = 1;
-    		    }
-
+    		controlMotor();
             sendEnc(CANID3);
     	}
 
@@ -199,70 +250,8 @@ void spinonce(void)
 			sendCan(2002, buf, 8, 1);//test
 			index = 0;
 
-				buf[index++] = 0;
-			    buf[index++] = 0;
-			    buf[index++] = 0;
-			    buf[index++] = 0;
-			    buf[index++] = 0;
-			    buf[index++] = 0;
-			    buf[index++] = 0;
-			    buf[index] = 0;
-
-			sendCan(2003, buf, 8, 1);//test
-			index = 0;
-
 
 		}
-
-		if((gTick>cansend_seq+3)){
-			cansend_seq = gTick;
-			tmpindex++;
-						//reqEnc
-			if((tmpindex/2)==0){
-			    buf[index++] = 0x40;
-			    buf[index++] = 0x6c;
-			    buf[index++] = 0x60;
-			    buf[index++] = 0x03;
-			    buf[index++] = 0x00;
-			    buf[index++] = 0x00;
-			    buf[index++] = 0x00;
-			    buf[index] = 0x00;
-			    index=0;
-			}
-
-			else{
-				index=0;
-			    buf[index++] = 0x40;
-			    buf[index++] = 0x3f;
-			    buf[index++] = 0x60;
-			    buf[index++] = 0x00;
-			    buf[index++] = 0x00;
-			    buf[index++] = 0x00;
-			    buf[index++] = 0x00;
-			    buf[index] = 0x00;
-			    index=0;
-			}
-			sendCan(MOTOR114_REQ_ID, buf, 8, 1);//test
-		}
-		if((gTick>CTLcansend_seq+4)){
-			CTLcansend_seq = gTick;
-
-				cmd_motor_rpm_left = -1*cmd_motor_rpm_left;
-			    buf[index++] = 0x23;
-			    buf[index++] = 0xff;
-			    buf[index++] = 0x60;
-			    buf[index++] = 0x03;
-			    buf[index++] = ((int)cmd_motor_rpm_left & 0xff);
-			    buf[index++] = ((int)cmd_motor_rpm_left>>8) & 0xff;
-			    buf[index++] =  ((int)cmd_motor_rpm_right) & 0xff;
-			    buf[index] = ((int)cmd_motor_rpm_right>>8) & 0xff;
-
-			sendCan(MOTOR114_REQ_ID, buf, 8, 1);//test
-			index = 0;
-		}
-
-
-
 		if(FLAG_RxCplt){
     		for(int i=0;i<8;i++){canbuf[i] = g_uCAN_Rx_Data[i];}
     		FLAG_RxCplt=0;
@@ -272,14 +261,15 @@ void spinonce(void)
     		switch(CanId)
     		{
             case CANID1:
-    		    temp = ((int16_t)canbuf[0]|(int16_t)canbuf[1]<<8);
-    		    cmd_v = (double)temp/SIGNIFICANT_FIGURES;
-    		    temp = ((int16_t)canbuf[2]|(int16_t)canbuf[3]<<8);
-    		    cmd_w = (double)temp/SIGNIFICANT_FIGURES;
-
-    		    cmd_motor_rpm_right = (60/(2*Math_PI*WHEEL_RADIUS)) * (cmd_v + (WHEEL_DISTANCE/2)*cmd_w);
-    		    cmd_motor_rpm_left = (60/(2*Math_PI*WHEEL_RADIUS)) * (cmd_v - (WHEEL_DISTANCE/2)*cmd_w);
-    		    motor_sw = canbuf[4];
+//    		    temp = ((int16_t)canbuf[0]|(int16_t)canbuf[1]<<8);
+//    		    cmd_v = (double)temp/SIGNIFICANT_FIGURES;
+//    		    temp = ((int16_t)canbuf[2]|(int16_t)canbuf[3]<<8);
+//    		    cmd_w = (double)temp/SIGNIFICANT_FIGURES;
+//
+//    		    cmd_motor_rpm_right = (60/(2*Math_PI*WHEEL_RADIUS)) * (cmd_v + (WHEEL_DISTANCE/2)*cmd_w);
+//    		    cmd_motor_rpm_left = (60/(2*Math_PI*WHEEL_RADIUS)) * (cmd_v - (WHEEL_DISTANCE/2)*cmd_w);
+//    		    motor_sw = canbuf[4];
+            	 parseCmdvel(canbuf);
                 break;
 
             case CANID2:
@@ -296,45 +286,27 @@ void spinonce(void)
                 break;
             case MOTOR114_RES_ID:
 
-//                if(msg.data[1] == 0x6c && msg.data[2] == 0x60)
-//                    parseEnc114(msg);
-//                if(msg.data[1] == 0x3f && msg.data[2] == 0x60)
-//                    parseState114(msg);
+                if(canbuf[1] == 0x6c && canbuf[2] == 0x60)
+                    parseEnc114(canbuf);
+                if(canbuf[1] == 0x3f && canbuf[2] == 0x60)
+                    parseState114(canbuf);
                 break;
             case MOTOR114_START_ID:
-                //motor114->startMotor();
+                startMotor();
                 break;
     		}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 		    g_tCan_Rx_Header.StdId=0;
 			g_tCan_Rx_Header.ExtId=0;
 			CanId = 0;
 
-
-
-
-
 		}
 		/////////must need USS of fine Tuning/////////
-		USS_start = gTick;
-		HAL_GPIO_WritePin(USS_Trigger1_GPIO_Port, USS_Trigger1_Pin, SET);
-		pre_gTick = gTick;
-		//while(gTick<(pre_gTick+50)){;}//wait 500us
-		HAL_GPIO_WritePin(USS_Trigger1_GPIO_Port, USS_Trigger1_Pin, RESET);
+//		USS_start = gTick;
+//		HAL_GPIO_WritePin(USS_Trigger1_GPIO_Port, USS_Trigger1_Pin, SET);
+//		pre_gTick = gTick;
+//		//while(gTick<(pre_gTick+50)){;}//wait 500us
+//		HAL_GPIO_WritePin(USS_Trigger1_GPIO_Port, USS_Trigger1_Pin, RESET);
 
 		//while(USS_end==0){;}
 
