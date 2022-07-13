@@ -1,0 +1,6 @@
+../Core/Src/SCI_bottom.c:42:6:HAL_TIM_PeriodElapsedCallback	16	static
+../Core/Src/SCI_bottom.c:51:6:HAL_GPIO_EXTI_Callback	16	static
+../Core/Src/SCI_bottom.c:61:6:sendEnc	40	static
+../Core/Src/SCI_bottom.c:80:5:toVW	16	static
+../Core/Src/SCI_bottom.c:92:6:parseEnc	24	static
+../Core/Src/SCI_bottom.c:116:6:spinonce	104	static
