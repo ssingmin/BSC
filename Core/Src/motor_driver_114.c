@@ -24,6 +24,7 @@ void velocityMode()
     sendCan(MOTOR114_REQ_ID, buf, 8, 0);
 //    can->sendMsg(MOTOR114_REQ_ID,buf,false);
 //    ThisThread::sleep_for(100);
+    HAL_Delay(100);
 }
 
 void synchronousMode()
@@ -41,6 +42,7 @@ void synchronousMode()
     sendCan(MOTOR114_REQ_ID, buf, 8, 0);
 //    can->sendMsg(MOTOR114_REQ_ID,buf,false);
 //    ThisThread::sleep_for(100);
+    HAL_Delay(100);
 }
 
 void settingEnc(int16_t enc)
@@ -60,6 +62,7 @@ void settingEnc(int16_t enc)
         sendCan(MOTOR114_REQ_ID, buf, 8, 0);
 //        can->sendMsg(MOTOR114_REQ_ID,buf,false);
 //        ThisThread::sleep_for(100);
+        HAL_Delay(100);
     }
 }
 
@@ -80,6 +83,7 @@ void settingPole(int16_t pole)
         sendCan(MOTOR114_REQ_ID, buf, 8, 0);
 //        can->sendMsg(MOTOR114_REQ_ID,buf,false);
 //        ThisThread::sleep_for(100);
+        HAL_Delay(100);
     }
 }
 
@@ -98,6 +102,7 @@ void settingBreak(uint8_t enable)
     sendCan(MOTOR114_REQ_ID, buf, 8, 0);
 //    can->sendMsg(MOTOR114_REQ_ID,buf,false);
 //    ThisThread::sleep_for(100);
+    HAL_Delay(100);
 }
 
 void settingMaxRPM(int16_t rpm)
@@ -115,6 +120,7 @@ void settingMaxRPM(int16_t rpm)
     sendCan(MOTOR114_REQ_ID, buf, 8, 0);
 //    can->sendMsg(MOTOR114_REQ_ID,buf,false);
 //    ThisThread::sleep_for(100);
+    HAL_Delay(100);
 }
 
 void settingRatedCurrent(double curr)
@@ -134,6 +140,7 @@ void settingRatedCurrent(double curr)
         sendCan(MOTOR114_REQ_ID, buf, 8, 0);
 //        can->sendMsg(MOTOR114_REQ_ID,buf,false);
 //        ThisThread::sleep_for(100);
+        HAL_Delay(100);
     }
 }
 
@@ -154,6 +161,7 @@ void settingMaxCurrent(double curr)
         sendCan(MOTOR114_REQ_ID, buf, 8, 0);
 //        can->sendMsg(MOTOR114_REQ_ID,buf,false);
 //        ThisThread::sleep_for(100);
+        HAL_Delay(100);
     }
 }
 
@@ -174,6 +182,7 @@ void settingHallOffset(int16_t degree)
         sendCan(MOTOR114_REQ_ID, buf, 8, 0);
 //        can->sendMsg(MOTOR114_REQ_ID,buf,false);
 //        ThisThread::sleep_for(100);
+        HAL_Delay(100);
     }
 }
 
@@ -193,6 +202,7 @@ void save()
     sendCan(MOTOR114_REQ_ID, buf, 8, 0);
 //    can->sendMsg(MOTOR114_REQ_ID,buf,false);
 //    ThisThread::sleep_for(100);
+    HAL_Delay(100);
 }
 
 
@@ -222,6 +232,7 @@ void enable()
         sendCan(MOTOR114_REQ_ID, buf, 8, 0);
 //        can->sendMsg(MOTOR114_REQ_ID,buf,false);
 //        ThisThread::sleep_for(100);
+        HAL_Delay(100);
     }
 }
 
@@ -241,6 +252,7 @@ void disable()
     sendCan(MOTOR114_REQ_ID, buf, 8, 0);
 //    can->sendMsg(MOTOR114_REQ_ID,buf,false);
 //    ThisThread::sleep_for(100);
+    HAL_Delay(100);
 }
 
 void reset()
@@ -258,6 +270,7 @@ void reset()
     sendCan(MOTOR114_REQ_ID, buf, 8, 0);
 //    can->sendMsg(MOTOR114_REQ_ID,buf,false);
 //    ThisThread::sleep_for(100);
+    HAL_Delay(100);
 }
 
 void reqEnc()
@@ -325,7 +338,8 @@ void settingKP(int16_t kp)
         buf[index] = 0x00;
         sendCan(MOTOR114_REQ_ID, buf, 8, 0);
 //        can->sendMsg(MOTOR114_REQ_ID,buf,false);
-//        ThisThread::sleep_for(100);
+//        ThisThread::sleep_for(1c0);
+        HAL_Delay(100);
     }
 }
 
@@ -346,6 +360,7 @@ void settingKI(int16_t ki)
         sendCan(MOTOR114_REQ_ID, buf, 8, 0);
 //        can->sendMsg(MOTOR114_REQ_ID,buf,false);
 //        ThisThread::sleep_for(100);
+        HAL_Delay(100);
     }
 }
 void settingMotor()

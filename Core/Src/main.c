@@ -127,9 +127,9 @@ int main(void)
   MX_TIM5_Init();
   /* USER CODE BEGIN 2 */
   //HAL_TIM_Base_Start_IT (&htim3);//system timer
-  HAL_TIM_Base_Start_IT (&htim5);//tmp timer, 2khz
-  HAL_TIM_Base_Start_IT (&htim6);//tmp timer, 100hz
-  HAL_TIM_Base_Start_IT (&htim7);//tmp timer, 1khz
+  HAL_TIM_Base_Start_IT (&htim5);//uss timer, 2khz
+  HAL_TIM_Base_Start_IT (&htim6);//system timer, 100hz
+  HAL_TIM_Base_Start_IT (&htim7);//uss timer, 1khz
 
 
 

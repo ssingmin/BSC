@@ -14,7 +14,7 @@
 uint8_t test = 0;
 uint32_t us_Tick = 0;
 uint32_t gTick = 0;
-uint32_t pre_gTick = 0;
+uint32_t pre_usTick = 0;
 uint32_t Tick_100ms = 0;
 uint32_t toggle_seq = 0;
 uint32_t cansend_seq = 0;
@@ -25,13 +25,36 @@ uint32_t sendsensor_seq = 0;
 
 uint32_t controlmotor_seq = 0;
 
-uint8_t motor_sw;
+uint32_t reqmotor_seq = 0;
+
+uint8_t motor_sw=1;
 int motor_break;
 int motor_disable_flag;
 
 uint32_t USS_start = 0;
 uint32_t USS_end = 0;
 uint32_t USS_tick = 0;
+
+
+int robot_state;
+uint8_t air_sw;
+uint8_t uv_sw;
+uint8_t charge_relay_sw;
+uint8_t charger_sw;
+uint8_t check_docking_sig;
+
+uint8_t touch;
+uint8_t pir[6];
+
+SensorState *sensor_state;
+int battery;
+
+uint8_t ready_flag;
+uint8_t start_docking_flag;
+
+
+int check_msg;
+
 
 MotorInfo *motor;
 SensorState *sensor_state;
@@ -45,12 +68,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)//sequence timer. gen
   if(htim->Instance == TIM5)
   {
 	  us_Tick++;
-	  //if(us_Tick>100){us_Tick=0;}
-//	  if(us_Tick>2000){
-//		  us_Tick=0;
-//		  HAL_GPIO_TogglePin(BLUEtest_GPIO_Port, BLUEtest_Pin);
-//	  }
-
+	  if(us_Tick>0xffff0000){us_Tick=0;}
   }
 
   if(htim->Instance == TIM6)
@@ -69,9 +87,60 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)//sequence timer. gen
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
     if(GPIO_Pin == USS_Data1_Pin) {
-    	USS_end = USS_tick;
+    	USS_end = us_Tick;
     }
+}
 
+
+void startTTS()
+{
+    char packit[8];
+    int index=0;
+
+    packit[index++]= 0;
+    packit[index++]= 0; // temporarily designated
+    packit[index++]= 0;
+    packit[index++]= 0;
+    packit[index++]= 0;
+    packit[index++]= 0;
+    packit[index++]= 1;
+    packit[index++]= 0;
+
+//    if(!can->send8BytePackit(CANID8,packit))
+//        can->reset();
+    sendCan(5001, packit, 8, 1);
+}
+
+void parsePmm(uint8_t *msg)
+{
+    /* x / x / x / x / x / x / air,uv,relay state/ Battery */
+    battery = msg[7];
+    sensor_state->air_purifier = (msg[6]&128)>>7;
+    sensor_state->uv = (msg[6]&64)>>6;
+    sensor_state->relay = (msg[6]&32)>>5;
+}
+
+
+void parseTop(uint8_t *msg)
+{
+    /* x / x / x / x / x / x /touch sensor/PIR */
+    for(int i=0; i<6; i++)
+        pir[i] = (msg[7]>>i)&1; // back is 0
+    touch = msg[6];
+}
+
+
+void parseState(uint8_t *msg)
+{
+    /* x / x / x / x / charging relay / air,uv on off / speaker / robot state */
+    robot_state = msg[7];
+    air_sw = (msg[5] & 128)>>7;
+    uv_sw = (msg[5] & 64)>>6;
+    charge_relay_sw = (msg[4] & 128)>>7;
+    charger_sw = (msg[4] & 64)>>6;
+    check_docking_sig = (msg[4] & 32)>>5;
+    //fan_duty = msg[3] / 100.0;
+    //controlFan(air_sw);
 }
 
 void controlMotor()
@@ -233,25 +302,46 @@ void spinonce(void)
 //    double cmd_w;
 
 
-	CanInit(0x100,0x1104);//filter id, mask
+	//CanInit(0x100,0x1104);//filter id, mask
+    CanInit(0,0);//filter id, mask
+
+
+    HAL_Delay(10000);
+
+    startTTS();
+    //state->set(IDLE);
+    ready_flag = 1;
+    start_docking_flag = 0;
+    check_msg = 0;
+
+    settingMotor();
+    startMotor();
+
 
 
 	while(1)
 	{
-    	if(Tick_100ms>toggle_seq+5) {		//for monitor iteration.
+
+
+		if(Tick_100ms>toggle_seq+5) {		//for monitor iteration.
     		toggle_seq = Tick_100ms;
     		HAL_GPIO_TogglePin(REDtest_GPIO_Port, REDtest_Pin);
-
     	}
-
 
 
     	if(gTick>controlmotor_seq+4) {		//about controlmotor do it!!!!!
     		controlmotor_seq = gTick;
-    		printf("hihi");
+    		//printf("hihi");
     		controlMotor();
             sendEnc(CANID3);
     	}
+    	if(gTick>reqmotor_seq+3) {		//about controlmotor do it!!!!!
+    		reqmotor_seq = gTick;
+
+    		if((reqmotor_seq%8) == 0){reqEnc();}
+    		else{reqState();}
+    	}
+
 
 
 		if((Tick_100ms>sendsensor_seq)){
@@ -260,17 +350,13 @@ void spinonce(void)
 			//printf("hihi: %d\n", USS_tick);
 
 			/////////must need USS of fine Tuning/////////
-//			USS_start = USS_tick;
-//			HAL_GPIO_WritePin(USS_Trigger1_GPIO_Port, USS_Trigger1_Pin, SET);
-//			pre_gTick = USS_tick;
-//			while(gTick<(pre_gTick+50)){;}//wait 500us
-//			HAL_GPIO_WritePin(USS_Trigger1_GPIO_Port, USS_Trigger1_Pin, RESET);
-//
-//			while(USS_end==0){;}
-//
-//			while(USS_tick<10){;}
-//			USS_tick = 0;
-//			printf("sonic value start, end, diff: %d  %d  %d\n", USS_start, USS_end, (USS_end-USS_start));
+			USS_start = us_Tick;
+			HAL_GPIO_WritePin(USS_Trigger1_GPIO_Port, USS_Trigger1_Pin, SET);
+			pre_usTick = us_Tick;
+			while(us_Tick == pre_usTick){;}//wait 500us
+			HAL_GPIO_WritePin(USS_Trigger1_GPIO_Port, USS_Trigger1_Pin, RESET);
+
+			//printf("sonic value start, end, diff: %d  %d  %d\n", USS_start, USS_end, (USS_end-USS_start));
 			//////////////////////////////////////////////
 
 			buf[index++] = 0;
@@ -293,45 +379,49 @@ void spinonce(void)
 			if(g_tCan_Rx_Header.StdId>g_tCan_Rx_Header.ExtId){CanId = g_tCan_Rx_Header.StdId;}
 			else {CanId = g_tCan_Rx_Header.ExtId;}
 
-    		switch(CanId)
-    		{
-            case CANID1:
-//    		    temp = ((int16_t)canbuf[0]|(int16_t)canbuf[1]<<8);
-//    		    cmd_v = (double)temp/SIGNIFICANT_FIGURES;
-//    		    temp = ((int16_t)canbuf[2]|(int16_t)canbuf[3]<<8);
-//    		    cmd_w = (double)temp/SIGNIFICANT_FIGURES;
-//
-//    		    cmd_motor_rpm_right = (60/(2*Math_PI*WHEEL_RADIUS)) * (cmd_v + (WHEEL_DISTANCE/2)*cmd_w);
-//    		    cmd_motor_rpm_left = (60/(2*Math_PI*WHEEL_RADIUS)) * (cmd_v - (WHEEL_DISTANCE/2)*cmd_w);
-//    		    motor_sw = canbuf[4];
-            	 parseCmdvel(canbuf);
-                break;
+			if(ready_flag)
+			{
+				switch(CanId)
+				{
+				case CANID1:
+					 parseCmdvel(canbuf);
+					break;
 
-            case CANID2:
-                //parseState(msg);
-                break;
-            case CANID5:
-                //parseTop(msg);
-                break;
-            case CANID6:
-                //parsePmm(msg);
-                break;
-            case CANID7:
-            	parseEnc(canbuf);
-                break;
-            case MOTOR114_RES_ID:
+				case CANID2:
+					parseState(canbuf);
+					break;
+				case CANID5:
+					parseTop(canbuf);
+					break;
+				case CANID6:
+					parsePmm(canbuf);
+					break;
+				case CANID7:
+					parseEnc(canbuf);
+					break;
+				case MOTOR114_RES_ID:
 
-                if(canbuf[1] == 0x6c && canbuf[2] == 0x60)
-                    parseEnc114(canbuf);
-                if(canbuf[1] == 0x3f && canbuf[2] == 0x60)
-                    parseState114(canbuf);
-                break;
-            case MOTOR114_START_ID:
-                startMotor();
-                break;
-    		}
-
-		    g_tCan_Rx_Header.StdId=0;
+					if(canbuf[1] == 0x6c && canbuf[2] == 0x60)
+						parseEnc114(canbuf);
+					if(canbuf[1] == 0x3f && canbuf[2] == 0x60)
+						parseState114(canbuf);
+					break;
+				case MOTOR114_START_ID:
+					startMotor();
+					break;
+				}
+			}
+//			  else
+//			  {
+//				  if(msg.id == 6001)
+//				  {
+//					  startTTS();
+//					  state->set(IDLE);
+//					  ready_flag = 1;
+//					  start_docking_flag = 0;
+//				  }
+//			  }
+	g_tCan_Rx_Header.StdId=0;
 			g_tCan_Rx_Header.ExtId=0;
 			CanId = 0;
 
