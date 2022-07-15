@@ -8,8 +8,8 @@
 #include "SCI_bottom.h"
 #include <stdint.h>
 #include "can.h"
-#include "define.h"
-
+#include "TransmitterIR.h"
+//#include "RemoteIR.h"
 
 uint8_t test = 0;
 uint32_t us_Tick = 0;
@@ -61,6 +61,19 @@ SensorState *sensor_state;
 
 extern uint8_t g_uCAN_Rx_Data[8];
 extern uint32_t FLAG_RxCplt;
+extern TIM_HandleTypeDef htim2;
+
+
+uint8_t robot_standby[4] = {0xCA, 0x35, 0x9A, 0x65};//RsTb
+uint8_t start_docking[4] = {0xCE, 0x32, 0x9B, 0x64};//SsDk
+uint8_t check_docking[4] = {0xCA, 0x35, 0x9C, 0x63};//RfIn
+uint8_t finish_docking[4] = {0xCE, 0x32, 0x9D, 0x62};//SsEt
+uint8_t charger_on[4] = {0xCA, 0x35, 0x9E, 0x61};//
+uint8_t charger_off[4] = {0xCA, 0x35, 0x9F, 0x60};//
+uint8_t battery_full[4] = {0xCA, 0x35, 0xAA, 0x55};
+uint8_t charger_state_temp;
+uint8_t check_docking_temp;
+uint8_t ready_flag;
 
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)//sequence timer. generate per 1ms
@@ -80,6 +93,12 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)//sequence timer. gen
   {
 	  USS_tick++;
 	  if(USS_tick>0xffff0000){USS_tick=0;}
+  }
+  if(htim->Instance == TIM9)
+  {
+	  HAL_GPIO_TogglePin(BLUEtest_GPIO_Port, BLUEtest_Pin);
+	  tick();
+
   }
 
 }
@@ -287,19 +306,10 @@ void spinonce(void)
 	uint8_t canbuf[8]={10, 20, 30, 40, 50, 60, 70, 80};
 	uint8_t buf[8];
     int index = 0;
-//    int tmpindex = 0;
 
     uint32_t CanId = 0;
-//    uint8_t motor_sw = 0;
-//    static int count = 0;
 
-//
-//
-//
-//	double cmd_motor_rpm_left;
-//	double cmd_motor_rpm_right;
-//    double cmd_v;
-//    double cmd_w;
+    uint8_t robot_standby[4] = {0xCA, 0x35, 0x9A, 0x65};//RsTb
 
 
 	//CanInit(0x100,0x1104);//filter id, mask
@@ -314,18 +324,24 @@ void spinonce(void)
     start_docking_flag = 0;
     check_msg = 0;
 
+    Format format = NEC;
+
+
     settingMotor();
     startMotor();
 
+    void TransmitterIR_init();
 
+    //htim2.Instance->CCR1 = 0;
+    //setData(format, robot_standby, 32);
 
 	while(1)
 	{
 
-
 		if(Tick_100ms>toggle_seq+5) {		//for monitor iteration.
     		toggle_seq = Tick_100ms;
     		HAL_GPIO_TogglePin(REDtest_GPIO_Port, REDtest_Pin);
+
     	}
 
 
@@ -335,7 +351,7 @@ void spinonce(void)
     		controlMotor();
             sendEnc(CANID3);
     	}
-    	if(gTick>reqmotor_seq+3) {		//about controlmotor do it!!!!!
+    	if(gTick>reqmotor_seq+3) {		//REQ MOTOR
     		reqmotor_seq = gTick;
 
     		if((reqmotor_seq%8) == 0){reqEnc();}
@@ -346,7 +362,7 @@ void spinonce(void)
 
 		if((Tick_100ms>sendsensor_seq)){
 			sendsensor_seq = Tick_100ms;
-
+			setData(format, robot_standby, 32);
 			//printf("hihi: %d\n", USS_tick);
 
 			/////////must need USS of fine Tuning/////////
@@ -356,7 +372,8 @@ void spinonce(void)
 			while(us_Tick == pre_usTick){;}//wait 500us
 			HAL_GPIO_WritePin(USS_Trigger1_GPIO_Port, USS_Trigger1_Pin, RESET);
 
-			//printf("sonic value start, end, diff: %d  %d  %d\n", USS_start, USS_end, (USS_end-USS_start));
+
+			printf("sonic value start, end, diff: %d  %d  %d\n", USS_start, USS_end, (USS_end-USS_start));
 			//////////////////////////////////////////////
 
 			buf[index++] = 0;
@@ -384,21 +401,25 @@ void spinonce(void)
 				switch(CanId)
 				{
 				case CANID1:
-					 parseCmdvel(canbuf);
+					parseCmdvel(canbuf);
 					break;
 
 				case CANID2:
 					parseState(canbuf);
 					break;
+
 				case CANID5:
 					parseTop(canbuf);
 					break;
+
 				case CANID6:
 					parsePmm(canbuf);
 					break;
+
 				case CANID7:
 					parseEnc(canbuf);
 					break;
+
 				case MOTOR114_RES_ID:
 
 					if(canbuf[1] == 0x6c && canbuf[2] == 0x60)
@@ -406,6 +427,7 @@ void spinonce(void)
 					if(canbuf[1] == 0x3f && canbuf[2] == 0x60)
 						parseState114(canbuf);
 					break;
+
 				case MOTOR114_START_ID:
 					startMotor();
 					break;
@@ -421,7 +443,7 @@ void spinonce(void)
 //					  start_docking_flag = 0;
 //				  }
 //			  }
-	g_tCan_Rx_Header.StdId=0;
+			g_tCan_Rx_Header.StdId=0;
 			g_tCan_Rx_Header.ExtId=0;
 			CanId = 0;
 

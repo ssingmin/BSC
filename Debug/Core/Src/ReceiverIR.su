@@ -1,0 +1,4 @@
+../Core/Src/ReceiverIR.c:24:7:ReceiverIR_init	8	static
+../Core/Src/ReceiverIR.c:44:7:getState	16	static
+../Core/Src/ReceiverIR.c:60:5:getData	40	static
+../Core/Src/ReceiverIR.c:82:6:init_state	16	static

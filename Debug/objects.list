@@ -1,5 +1,8 @@
+"./Core/Src/ReceiverIR.o"
 "./Core/Src/SCI_bottom.o"
+"./Core/Src/TransmitterIR.o"
 "./Core/Src/can.o"
+"./Core/Src/charging.o"
 "./Core/Src/led.o"
 "./Core/Src/main.o"
 "./Core/Src/motor_driver_114.o"

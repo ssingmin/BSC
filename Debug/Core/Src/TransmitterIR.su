@@ -1,0 +1,4 @@
+../Core/Src/TransmitterIR.c:19:6:TransmitterIR_init	4	static
+../Core/Src/TransmitterIR.c:42:7:getState	16	static
+../Core/Src/TransmitterIR.c:58:5:setData	32	static
+../Core/Src/TransmitterIR.c:100:6:tick	8	static
