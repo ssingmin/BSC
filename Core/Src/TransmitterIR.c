@@ -25,7 +25,7 @@ void TransmitterIR_init()
 	IRDUTY0;
 	//IRDUTY50;
 
-	TIR_work.state = Idle;
+	TIR_work.state = TIR_Idle;
 	TIR_work.bitcount = 0;
 	TIR_work.leader = 0;
 	TIR_work.data = 0;
@@ -39,9 +39,9 @@ void TransmitterIR_init()
 
 }
 
-State TIR_getState(void) {
+TIR_State TIR_getState(void) {
     LOCK();
-    State s = TIR_work.state;
+    TIR_State s = TIR_work.state;
     UNLOCK();
     return s;
 }
@@ -57,7 +57,7 @@ State TIR_getState(void) {
  */
 int setData(Format format, uint8_t *buf, int bitlength) {
     LOCK();
-    if (TIR_work.state != Idle) {
+    if (TIR_work.state != TIR_Idle) {
         UNLOCK();
         return -1;
     }
@@ -100,7 +100,7 @@ int setData(Format format, uint8_t *buf, int bitlength) {
 void tick(void) {
     LOCK();
     switch (TIR_work.state) {
-        case Idle:
+        case TIR_Idle:
             TIR_work.bitcount = 0;
             TIR_work.leader = 0;
             TIR_work.data = 0;
@@ -257,9 +257,10 @@ void tick(void) {
                 }
                 TIR_work.trailer++;
                 if ((TRAILER_NEC_HEAD + TRAILER_NEC_TAIL) <= TIR_work.trailer) {
-                    TIR_work.state = Idle;
+                    TIR_work.state = TIR_Idle;
                     //ticker.detach();
                     HAL_TIM_Base_Stop_IT (&htim9);//uss timer, 1779hz
+                    HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);//이걸로 수신시작할 것
                 }
             } else if (TIR_data.format == AEHA) {
                 /*
@@ -274,7 +275,7 @@ void tick(void) {
                 }
                 TIR_work.trailer++;
                 if ((TRAILER_AEHA_HEAD + TRAILER_AEHA_TAIL) <= TIR_work.trailer) {
-                    TIR_work.state = Idle;
+                    TIR_work.state = TIR_Idle;
                     //ticker.detach();
                 }
             } else if (TIR_data.format == SONY) {
@@ -290,7 +291,7 @@ void tick(void) {
                 }
                 TIR_work.trailer++;
                 if ((TRAILER_SONY_HEAD + TRAILER_SONY_TAIL) <= TIR_work.trailer) {
-                    TIR_work.state = Idle;
+                    TIR_work.state = TIR_Idle;
                     //ticker.detach();
                 }
             } else {

@@ -9,8 +9,8 @@
 #include <stdint.h>
 #include "can.h"
 #include "TransmitterIR.h"
-//#include "RemoteIR.h"
-//#include "ReceiverIR.h"
+#include "RemoteIR.h"
+#include "ReceiverIR.h"
 
 uint8_t test = 0;
 uint32_t us_Tick = 0;
@@ -82,6 +82,8 @@ uint8_t battery_full[4] = {0xCA, 0x35, 0xAA, 0x55};
 uint8_t charger_state_temp;
 uint8_t check_docking_temp;
 uint8_t ready_flag;
+
+uint8_t recv_buf[32] = {0,};
 
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)//sequence timer. generate per 1ms
@@ -156,6 +158,25 @@ void startTTS()
     packit[index++]= 0;
     packit[index++]= 0;
     packit[index++]= 1;
+    packit[index++]= 0;
+
+//    if(!can->send8BytePackit(CANID8,packit))
+//        can->reset();
+    sendCan(5001, packit, 8, 1);
+}
+
+void endTTS()
+{
+    char packit[8];
+    int index=0;
+
+    packit[index++]= 0;
+    packit[index++]= 0; // temporarily designated
+    packit[index++]= 0;
+    packit[index++]= 0;
+    packit[index++]= 0;
+    packit[index++]= 0;
+    packit[index++]= 9;
     packit[index++]= 0;
 
 //    if(!can->send8BytePackit(CANID8,packit))
@@ -349,7 +370,7 @@ void spinonce(void)
     CanInit(0,0);//filter id, mask
 
 
-//    HAL_Delay(10000);
+   // HAL_Delay(10000);
     HAL_Delay(1000);
     startTTS();
     //state->set(IDLE);
@@ -358,12 +379,14 @@ void spinonce(void)
     check_msg = 0;
 
     Format format = NEC;
-
+    int start_docking_count_tmp = 0;
 
     settingMotor();
     startMotor();
 
-    void TransmitterIR_init();
+    TransmitterIR_init();
+    ReceiverIR_init();
+    //HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);//이걸로 수신시작할 것
 
     //htim2.Instance->CCR1 = 0;
     //setData(format, robot_standby, 32);
@@ -374,6 +397,7 @@ void spinonce(void)
 		if(Tick_100ms>toggle_seq+5) {		//for monitor iteration.
     		toggle_seq = Tick_100ms;
     		HAL_GPIO_TogglePin(REDtest_GPIO_Port, REDtest_Pin);
+    		setData(format, robot_standby, 32);/////must be to make ir_seq
 
     	}
 
@@ -395,7 +419,20 @@ void spinonce(void)
 
 		if((Tick_100ms>sendsensor_seq)){
 			sendsensor_seq = Tick_100ms;
-			setData(format, robot_standby, 32);
+
+			getData(&format, recv_buf, sizeof(recv_buf)*8);
+		    for(int i = 0; i<4; i++)
+		    {
+		        if(recv_buf[i] == start_docking[i])
+		        {
+		            start_docking_count_tmp++;
+		        }
+		    }
+		    if(start_docking_count_tmp == 4){
+		    	HAL_GPIO_TogglePin(BLUEtest_GPIO_Port, BLUEtest_Pin);
+		    }
+
+
 			//printf("hihi: %d\n", USS_tick);
 
 			/////////must need USS of fine Tuning/////////

@@ -29,16 +29,16 @@ extern uint8_t TIR_setData_flag;
      * @param txpin Pin for transmit IR signal.
      */
     typedef enum {
-        Idle,
+    	TIR_Idle,
         Leader,
         Data,
         Trailer
-    } State;
+    } TIR_State;
 
 
 
     typedef struct {
-        State state;
+    	TIR_State state;
         int bitcount;
         int leader;
         int data;
@@ -57,7 +57,7 @@ extern uint8_t TIR_setData_flag;
      *
      * @return Current state.
      */
-    State TIR_getState(void);
+    TIR_State TIR_getState(void);
 
     /**
      * Set data.
