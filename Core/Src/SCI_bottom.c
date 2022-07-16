@@ -10,6 +10,7 @@
 #include "can.h"
 #include "TransmitterIR.h"
 //#include "RemoteIR.h"
+//#include "ReceiverIR.h"
 
 uint8_t test = 0;
 uint32_t us_Tick = 0;
@@ -18,6 +19,13 @@ uint32_t pre_usTick = 0;
 uint32_t Tick_100ms = 0;
 uint32_t toggle_seq = 0;
 uint32_t cansend_seq = 0;
+
+uint8_t TIR_setData_flag = 0;
+
+uint32_t IR_NEC_Tick = 0;
+uint8_t isr_timeout_counter = 0;
+uint8_t isr_timeout_flag = 0;
+
 
 uint32_t CTLcansend_seq = 0;
 
@@ -89,18 +97,24 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)//sequence timer. gen
 	  gTick++;
 	  if((gTick%10) == 0){Tick_100ms++;}
   }
+
   if(htim->Instance == TIM7)
   {
 	  USS_tick++;
 	  if(USS_tick>0xffff0000){USS_tick=0;}
   }
+
   if(htim->Instance == TIM9)
   {
-	  HAL_GPIO_TogglePin(BLUEtest_GPIO_Port, BLUEtest_Pin);
-	  tick();
-
+	  if(TIR_setData_flag)tick();
+	  if(isr_timeout_flag){isr_timeout_counter++;}
+	  if(isr_timeout_counter>5){isr_timeout();}
   }
 
+  if(htim->Instance == TIM14)
+  {
+	  IR_NEC_Tick++;
+  }
 }
 
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
@@ -108,6 +122,25 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
     if(GPIO_Pin == USS_Data1_Pin) {
     	USS_end = us_Tick;
     }
+
+//    HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);//이걸로 수신시작할 것
+//    HAL_NVIC_DisableIRQ(EXTI15_10_IRQn);
+
+    if(GPIO_Pin == evt_rxpin_Pin){ //check interrupt for specific pin
+            if(HAL_GPIO_ReadPin(evt_rxpin_GPIO_Port, evt_rxpin_Pin)){ //check pin state
+                /* do something */ //high edge
+            	//HAL_GPIO_TogglePin(BLUEtest_GPIO_Port, BLUEtest_Pin);
+            	//HAL_GPIO_WritePin(BLUEtest_GPIO_Port, BLUEtest_Pin, SET);
+            	isr_rise();
+            }
+
+            if(!HAL_GPIO_ReadPin(evt_rxpin_GPIO_Port, evt_rxpin_Pin)){
+                /* do something */ //low edge
+            	//HAL_GPIO_TogglePin(BLUEtest_GPIO_Port, BLUEtest_Pin);
+            	//HAL_GPIO_WritePin(BLUEtest_GPIO_Port, BLUEtest_Pin, RESET);
+            	isr_fall();
+            }
+        }
 }
 
 
@@ -316,8 +349,8 @@ void spinonce(void)
     CanInit(0,0);//filter id, mask
 
 
-    HAL_Delay(10000);
-
+//    HAL_Delay(10000);
+    HAL_Delay(1000);
     startTTS();
     //state->set(IDLE);
     ready_flag = 1;

@@ -17,7 +17,7 @@
 
 
 extern TIM_HandleTypeDef htim2;
-
+extern uint8_t TIR_setData_flag;
 
 /**
  * IR transmitter class.
@@ -43,13 +43,13 @@ extern TIM_HandleTypeDef htim2;
         int leader;
         int data;
         int trailer;
-    } work_t;
+    } TIR_work_t;
 
     typedef struct {
         Format format;
         int bitlength;
         uint8_t buffer[64];
-    } data_t;
+    } TIR_data_t;
 
 
     /**
@@ -57,7 +57,7 @@ extern TIM_HandleTypeDef htim2;
      *
      * @return Current state.
      */
-    State getState(void);
+    State TIR_getState(void);
 
     /**
      * Set data.

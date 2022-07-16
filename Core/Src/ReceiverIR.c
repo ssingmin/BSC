@@ -13,6 +13,7 @@
 #define InRange(x,y)   ((((y) * 0.7) < (x)) && ((x) < ((y) * 1.3)))
 
 
+
     data_t data;
     work_t work;
 
@@ -24,10 +25,10 @@
 	void ReceiverIR_init()
 	{
 		init_state();
-//		    evt.fall(this, &ReceiverIR::isr_fall);
-//		    evt.rise(this, &ReceiverIR::isr_rise);
+//		    evt.fall(this, &isr_fall);
+//		    evt.rise(this, &isr_rise);
 //		    evt.mode(PullUp);
-//		    ticker.attach_us(this, &ReceiverIR::isr_wdt, 10 * 1000);
+//		    ticker.attach_us(this, &isr_wdt, 10 * 1000);
 	}
 
 
@@ -88,14 +89,15 @@ void init_state(void) {
     work.state = Idle;
     data.format = UNKNOWN;
     data.bitcount = 0;
-//    timer.stop();
-//    timer.reset();
+    HAL_TIM_Base_Stop_IT(&htim14);  //timer.stop();
+    HAL_NVIC_DisableIRQ(EXTI15_10_IRQn); //input interrupt stop
+    IR_NEC_Tick = 0;  //timer.reset();
     for (int i = 0; i < sizeof(data.buffer); i++) {
         data.buffer[i] = 0;
     }
 }
-#if 0
-void ReceiverIR::isr_wdt(void) {
+
+void isr_wdt(void) {
     LOCK();
     static int cnt = 0;
     if ((Idle != work.state) || ((0 <= work.c1) || (0 <= work.c2) || (0 <= work.c3) || (0 <= work.d1) || (0 <= work.d2))) {
@@ -121,29 +123,29 @@ void ReceiverIR::isr_wdt(void) {
     UNLOCK();
 }
 
-void ReceiverIR::isr_fall(void) {
+void isr_fall(void) {
     LOCK();
     switch (work.state) {
         case Idle:
             if (work.c1 < 0) {
-                timer.start();
-                work.c1 = timer.read_us();
+            	HAL_TIM_Base_Start_IT(&htim14);  //timer.start();
+                work.c1 = IR_NEC_Tick;  //timer.read_us();
             } else {
-                work.c3 = timer.read_us();
+			work.c3 = IR_NEC_Tick;  //timer.read_us();
                 int a = work.c2 - work.c1;
                 int b = work.c3 - work.c2;
-                if (InRange(a, RemoteIR::TUS_NEC * 16) && InRange(b, RemoteIR::TUS_NEC * 8)) {
+                if (InRange(a, TUS_NEC * 16) && InRange(b, TUS_NEC * 8)) {
                     /*
                      * NEC.
                      */
-                    data.format = RemoteIR::NEC;
+                    data.format = NEC;
                     work.state = Receiving;
                     data.bitcount = 0;
-                } else if (InRange(a, RemoteIR::TUS_NEC * 16) && InRange(b, RemoteIR::TUS_NEC * 4)) {
+                } else if (InRange(a, TUS_NEC * 16) && InRange(b, TUS_NEC * 4)) {
                     /*
                      * NEC Repeat.
                      */
-                    data.format = RemoteIR::NEC_REPEAT;
+                    data.format = NEC_REPEAT;
                     work.state = Received;
                     data.bitcount = 0;
                     work.c1 = -1;
@@ -151,18 +153,18 @@ void ReceiverIR::isr_fall(void) {
                     work.c3 = -1;
                     work.d1 = -1;
                     work.d2 = -1;
-                } else if (InRange(a, RemoteIR::TUS_AEHA * 8) && InRange(b, RemoteIR::TUS_AEHA * 4)) {
+                } else if (InRange(a, TUS_AEHA * 8) && InRange(b, TUS_AEHA * 4)) {
                     /*
                      * AEHA.
                      */
-                    data.format = RemoteIR::AEHA;
+                    data.format = AEHA;
                     work.state = Receiving;
                     data.bitcount = 0;
-                } else if (InRange(a, RemoteIR::TUS_AEHA * 8) && InRange(b, RemoteIR::TUS_AEHA * 8)) {
+                } else if (InRange(a, TUS_AEHA * 8) && InRange(b, TUS_AEHA * 8)) {
                     /*
                      * AEHA Repeat.
                      */
-                    data.format = RemoteIR::AEHA_REPEAT;
+                    data.format = AEHA_REPEAT;
                     work.state = Received;
                     data.bitcount = 0;
                     work.c1 = -1;
@@ -176,12 +178,12 @@ void ReceiverIR::isr_fall(void) {
             }
             break;
         case Receiving:
-            if (RemoteIR::NEC == data.format) {
-                work.d2 = timer.read_us();
+            if (NEC == data.format) {
+                work.d2 = IR_NEC_Tick;  //timer.read_us();
                 int a = work.d2 - work.d1;
-                if (InRange(a, RemoteIR::TUS_NEC * 3)) {
+                if (InRange(a, TUS_NEC * 3)) {
                     data.buffer[data.bitcount / 8] |= (1 << (data.bitcount % 8));
-                } else if (InRange(a, RemoteIR::TUS_NEC * 1)) {
+                } else if (InRange(a, TUS_NEC * 1)) {
                     data.buffer[data.bitcount / 8] &= ~(1 << (data.bitcount % 8));
                 }
                 data.bitcount++;
@@ -201,15 +203,16 @@ void ReceiverIR::isr_fall(void) {
                 /*
                  * Set timeout for tail detection automatically.
                  */
-                timeout.detach();
-                timeout.attach_us(this, &ReceiverIR::isr_timeout, RemoteIR::TUS_NEC * 5);
+//                timeout.detach();
+//                timeout.attach_us(this, &isr_timeout, TUS_NEC * 5);
+                isr_timeout_flag = 1;
 #endif
-            } else if (RemoteIR::AEHA == data.format) {
-                work.d2 = timer.read_us();
+            } else if (AEHA == data.format) {
+                work.d2 = IR_NEC_Tick;  //timer.read_us();
                 int a = work.d2 - work.d1;
-                if (InRange(a, RemoteIR::TUS_AEHA * 3)) {
+                if (InRange(a, TUS_AEHA * 3)) {
                     data.buffer[data.bitcount / 8] |= (1 << (data.bitcount % 8));
-                } else if (InRange(a, RemoteIR::TUS_AEHA * 1)) {
+                } else if (InRange(a, TUS_AEHA * 1)) {
                     data.buffer[data.bitcount / 8] &= ~(1 << (data.bitcount % 8));
                 }
                 data.bitcount++;
@@ -230,11 +233,11 @@ void ReceiverIR::isr_fall(void) {
                 /*
                  * Set timeout for tail detection automatically.
                  */
-                timeout.detach();
-                timeout.attach_us(this, &ReceiverIR::isr_timeout, RemoteIR::TUS_AEHA * 5);
+//                timeout.detach();
+//                timeout.attach_us(this, &isr_timeout, TUS_AEHA * 5);
 #endif
-            } else if (RemoteIR::SONY == data.format) {
-                work.d1 = timer.read_us();
+            } else if (SONY == data.format) {
+                work.d1 = IR_NEC_Tick;  //timer.read_us();
             }
             break;
         case Received:
@@ -245,15 +248,15 @@ void ReceiverIR::isr_fall(void) {
     UNLOCK();
 }
 
-void ReceiverIR::isr_rise(void) {
+void isr_rise(void) {
     LOCK();
     switch (work.state) {
         case Idle:
             if (0 <= work.c1) {
-                work.c2 = timer.read_us();
+                work.c2 = IR_NEC_Tick;  //timer.read_us();
                 int a = work.c2 - work.c1;
-                if (InRange(a, RemoteIR::TUS_SONY * 4)) {
-                    data.format = RemoteIR::SONY;
+                if (InRange(a, TUS_SONY * 4)) {
+                    data.format = SONY;
                     work.state = Receiving;
                     data.bitcount = 0;
                 } else {
@@ -267,16 +270,16 @@ void ReceiverIR::isr_rise(void) {
             }
             break;
         case Receiving:
-            if (RemoteIR::NEC == data.format) {
-                work.d1 = timer.read_us();
-            } else if (RemoteIR::AEHA == data.format) {
-                work.d1 = timer.read_us();
-            } else if (RemoteIR::SONY == data.format) {
-                work.d2 = timer.read_us();
+            if (NEC == data.format) {
+                work.d1 = IR_NEC_Tick;  //timer.read_us();
+            } else if (AEHA == data.format) {
+                work.d1 = IR_NEC_Tick;  //timer.read_us();
+            } else if (SONY == data.format) {
+                work.d2 = IR_NEC_Tick;  //timer.read_us();
                 int a = work.d2 - work.d1;
-                if (InRange(a, RemoteIR::TUS_SONY * 2)) {
+                if (InRange(a, TUS_SONY * 2)) {
                     data.buffer[data.bitcount / 8] |= (1 << (data.bitcount % 8));
-                } else if (InRange(a, RemoteIR::TUS_SONY * 1)) {
+                } else if (InRange(a, TUS_SONY * 1)) {
                     data.buffer[data.bitcount / 8] &= ~(1 << (data.bitcount % 8));
                 }
                 data.bitcount++;
@@ -298,8 +301,8 @@ void ReceiverIR::isr_rise(void) {
                 /*
                  * Set timeout for tail detection automatically.
                  */
-                timeout.detach();
-                timeout.attach_us(this, &ReceiverIR::isr_timeout, RemoteIR::TUS_SONY * 4);
+//                timeout.detach();
+//                timeout.attach_us(this, &isr_timeout, TUS_SONY * 4);
 #endif
             }
             break;
@@ -311,7 +314,7 @@ void ReceiverIR::isr_rise(void) {
     UNLOCK();
 }
 
-void ReceiverIR::isr_timeout(void) {
+void isr_timeout(void) {
     LOCK();
 #if 0
     printf("# TIMEOUT [c1=%d, c2=%d, c3=%d, d1=%d, d2=%d, state=%d, format=%d, bitcount=%d]\n",
@@ -334,4 +337,4 @@ void ReceiverIR::isr_timeout(void) {
     }
     UNLOCK();
 }
-#endif
+
