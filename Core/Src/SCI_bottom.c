@@ -11,6 +11,7 @@
 #include "TransmitterIR.h"
 #include "RemoteIR.h"
 #include "ReceiverIR.h"
+#include "charging.h"
 
 uint8_t test = 0;
 uint32_t us_Tick = 0;
@@ -22,7 +23,7 @@ uint32_t cansend_seq = 0;
 
 uint8_t TIR_setData_flag = 0;
 
-uint32_t IR_NEC_Tick = 0;
+int IR_NEC_Tick = 0;
 uint8_t isr_timeout_counter = 0;
 uint8_t isr_timeout_flag = 0;
 
@@ -70,20 +71,21 @@ SensorState *sensor_state;
 extern uint8_t g_uCAN_Rx_Data[8];
 extern uint32_t FLAG_RxCplt;
 extern TIM_HandleTypeDef htim2;
+extern uint8_t recv_buf[32];
 
+extern uint8_t robot_standby[4];//RsTb
+extern uint8_t start_docking[4];//SsDk
+extern uint8_t check_docking[4];//RfIn
+extern uint8_t finish_docking[4];//SsEt
+extern uint8_t charger_on[4];//
+extern uint8_t charger_off[4];//
+extern uint8_t battery_full[4];
 
-uint8_t robot_standby[4] = {0xCA, 0x35, 0x9A, 0x65};//RsTb
-uint8_t start_docking[4] = {0xCE, 0x32, 0x9B, 0x64};//SsDk
-uint8_t check_docking[4] = {0xCA, 0x35, 0x9C, 0x63};//RfIn
-uint8_t finish_docking[4] = {0xCE, 0x32, 0x9D, 0x62};//SsEt
-uint8_t charger_on[4] = {0xCA, 0x35, 0x9E, 0x61};//
-uint8_t charger_off[4] = {0xCA, 0x35, 0x9F, 0x60};//
-uint8_t battery_full[4] = {0xCA, 0x35, 0xAA, 0x55};
 uint8_t charger_state_temp;
 uint8_t check_docking_temp;
 uint8_t ready_flag;
 
-uint8_t recv_buf[32] = {0,};
+//uint8_t recv_buf[32] = {0,};
 
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)//sequence timer. generate per 1ms
@@ -115,9 +117,13 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)//sequence timer. gen
 
   if(htim->Instance == TIM14)
   {
-	  IR_NEC_Tick++;
+	  IR_NEC_Tick+=4;
+	  //printf("%d", IR_NEC_Tick);
+	  //if(IR_NEC_Tick>10) {HAL_GPIO_TogglePin(BLUEtest_GPIO_Port, BLUEtest_Pin);IR_NEC_Tick=0;}
+	  //HAL_GPIO_TogglePin(BLUEtest_GPIO_Port, BLUEtest_Pin);
   }
 }
+
 
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
@@ -133,14 +139,16 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
                 /* do something */ //high edge
             	//HAL_GPIO_TogglePin(BLUEtest_GPIO_Port, BLUEtest_Pin);
             	//HAL_GPIO_WritePin(BLUEtest_GPIO_Port, BLUEtest_Pin, SET);
-            //	isr_rise();
+            	isr_rise();
+            	printf("high edge\n");
             }
 
             if(!HAL_GPIO_ReadPin(evt_rxpin_GPIO_Port, evt_rxpin_Pin)){
                 /* do something */ //low edge
             	//HAL_GPIO_TogglePin(BLUEtest_GPIO_Port, BLUEtest_Pin);
             	//HAL_GPIO_WritePin(BLUEtest_GPIO_Port, BLUEtest_Pin, RESET);
-            //	isr_fall();
+            	isr_fall();
+            	printf("low edge\n");
             }
         }
 }
@@ -390,25 +398,21 @@ void spinonce(void)
 
     //htim2.Instance->CCR1 = 0;
     //setData(format, robot_standby, 32);
-
+    char smleetmp = 0;
 	while(1)
 	{
 
 		if(Tick_100ms>toggle_seq+5) {		//for monitor iteration.
     		toggle_seq = Tick_100ms;
     		HAL_GPIO_TogglePin(REDtest_GPIO_Port, REDtest_Pin);
-    		setData(format, robot_standby, 32);/////must be to make ir_seq
-    		getData(&format, recv_buf, 32);
-		    for(int i = 0; i<4; i++)
-		    {
-		        if(recv_buf[i] == start_docking[i])
-		        {
-		            start_docking_count_tmp++;
-		        }
-		    }
-		    if(start_docking_count_tmp == 4){
-		    	HAL_GPIO_TogglePin(BLUEtest_GPIO_Port, BLUEtest_Pin);
-		    }
+    		//setData(format, robot_standby, 32);/////must be to make ir_seq
+    		sendIRdata(robot_standby);
+    		//HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);//이걸로 수신시작할 것
+    		smleetmp = checkIRdata();
+    		printf("hihi: %d\n", smleetmp);
+    		if(smleetmp==1){
+    			HAL_GPIO_TogglePin(BLUEtest_GPIO_Port, BLUEtest_Pin);
+    		}
     	}
 
 
@@ -453,7 +457,7 @@ void spinonce(void)
 			HAL_GPIO_WritePin(USS_Trigger1_GPIO_Port, USS_Trigger1_Pin, RESET);
 
 
-			printf("sonic value start, end, diff: %d  %d  %d\n", USS_start, USS_end, (USS_end-USS_start));
+			//printf("sonic value start, end, diff: %d  %d  %d\n", USS_start, USS_end, (USS_end-USS_start));
 			//////////////////////////////////////////////
 
 			buf[index++] = 0;

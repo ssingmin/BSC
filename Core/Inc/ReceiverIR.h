@@ -6,7 +6,7 @@
 #include "stm32f7xx_hal.h"
 #include "main.h"
 
-extern uint32_t IR_NEC_Tick;
+extern int IR_NEC_Tick;
 
 extern TIM_HandleTypeDef htim14;
 extern uint8_t isr_timeout_flag;

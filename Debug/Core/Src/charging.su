@@ -1,0 +1,2 @@
+../Core/Src/charging.c:22:6:sendIRdata	16	static
+../Core/Src/charging.c:32:5:checkIRdata	32	static
