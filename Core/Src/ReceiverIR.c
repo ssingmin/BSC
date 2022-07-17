@@ -69,7 +69,8 @@ int getData(Format *format, uint8_t *buf, int bitlength) {
     const int nbits = data.bitcount;
     const int nbytes = data.bitcount / 8 + (((data.bitcount % 8) != 0) ? 1 : 0);
 
-    *format = data.format;
+    //*format = data.format;
+    *format = NEC;
     for (int i = 0; i < nbytes; i++) {
         buf[i] = data.buffer[i];
     }

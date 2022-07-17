@@ -108,9 +108,9 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)//sequence timer. gen
 
   if(htim->Instance == TIM9)
   {
-	  if(TIR_setData_flag)tick();
+	  if(TIR_setData_flag){tick();}
 	  if(isr_timeout_flag){isr_timeout_counter++;}
-	  if(isr_timeout_counter>5){isr_timeout();}
+	  //if(isr_timeout_counter>5){isr_timeout();}
   }
 
   if(htim->Instance == TIM14)
@@ -133,14 +133,14 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
                 /* do something */ //high edge
             	//HAL_GPIO_TogglePin(BLUEtest_GPIO_Port, BLUEtest_Pin);
             	//HAL_GPIO_WritePin(BLUEtest_GPIO_Port, BLUEtest_Pin, SET);
-            	isr_rise();
+            //	isr_rise();
             }
 
             if(!HAL_GPIO_ReadPin(evt_rxpin_GPIO_Port, evt_rxpin_Pin)){
                 /* do something */ //low edge
             	//HAL_GPIO_TogglePin(BLUEtest_GPIO_Port, BLUEtest_Pin);
             	//HAL_GPIO_WritePin(BLUEtest_GPIO_Port, BLUEtest_Pin, RESET);
-            	isr_fall();
+            //	isr_fall();
             }
         }
 }
@@ -398,7 +398,17 @@ void spinonce(void)
     		toggle_seq = Tick_100ms;
     		HAL_GPIO_TogglePin(REDtest_GPIO_Port, REDtest_Pin);
     		setData(format, robot_standby, 32);/////must be to make ir_seq
-
+    		getData(&format, recv_buf, 32);
+		    for(int i = 0; i<4; i++)
+		    {
+		        if(recv_buf[i] == start_docking[i])
+		        {
+		            start_docking_count_tmp++;
+		        }
+		    }
+		    if(start_docking_count_tmp == 4){
+		    	HAL_GPIO_TogglePin(BLUEtest_GPIO_Port, BLUEtest_Pin);
+		    }
     	}
 
 
@@ -420,17 +430,17 @@ void spinonce(void)
 		if((Tick_100ms>sendsensor_seq)){
 			sendsensor_seq = Tick_100ms;
 
-			getData(&format, recv_buf, sizeof(recv_buf)*8);
-		    for(int i = 0; i<4; i++)
-		    {
-		        if(recv_buf[i] == start_docking[i])
-		        {
-		            start_docking_count_tmp++;
-		        }
-		    }
-		    if(start_docking_count_tmp == 4){
-		    	HAL_GPIO_TogglePin(BLUEtest_GPIO_Port, BLUEtest_Pin);
-		    }
+			//getData(&format, recv_buf, sizeof(recv_buf)*8);
+//		    for(int i = 0; i<4; i++)
+//		    {
+//		        if(recv_buf[i] == start_docking[i])
+//		        {
+//		            start_docking_count_tmp++;
+//		        }
+//		    }
+//		    if(start_docking_count_tmp == 4){
+//		    	HAL_GPIO_TogglePin(BLUEtest_GPIO_Port, BLUEtest_Pin);
+//		    }
 
 
 			//printf("hihi: %d\n", USS_tick);
