@@ -13,7 +13,7 @@
 #include "ReceiverIR.h"
 #include "charging.h"
 
-uint8_t test = 0;
+uint8_t smleetest = 0;
 uint32_t us_Tick = 0;
 uint32_t gTick = 0;
 uint32_t pre_usTick = 0;
@@ -112,12 +112,16 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)//sequence timer. gen
   {
 	  if(TIR_setData_flag){tick();}
 	  if(isr_timeout_flag){isr_timeout_counter++;}
-	  //if(isr_timeout_counter>5){isr_timeout();}
+	  if(isr_timeout_counter>10){
+		  isr_timeout_counter = 0;
+		  isr_timeout_flag = 0;
+		  isr_timeout();
+	  }
   }
 
   if(htim->Instance == TIM14)
   {
-	  IR_NEC_Tick+=4;
+	  IR_NEC_Tick+=10;
 	  //printf("%d", IR_NEC_Tick);
 	  //if(IR_NEC_Tick>10) {HAL_GPIO_TogglePin(BLUEtest_GPIO_Port, BLUEtest_Pin);IR_NEC_Tick=0;}
 	  //HAL_GPIO_TogglePin(BLUEtest_GPIO_Port, BLUEtest_Pin);
@@ -135,20 +139,23 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 //    HAL_NVIC_DisableIRQ(EXTI15_10_IRQn);
 
     if(GPIO_Pin == evt_rxpin_Pin){ //check interrupt for specific pin
+    	printf("edge: %d\n", IR_NEC_Tick);
             if(HAL_GPIO_ReadPin(evt_rxpin_GPIO_Port, evt_rxpin_Pin)){ //check pin state
                 /* do something */ //high edge
-            	//HAL_GPIO_TogglePin(BLUEtest_GPIO_Port, BLUEtest_Pin);
-            	//HAL_GPIO_WritePin(BLUEtest_GPIO_Port, BLUEtest_Pin, SET);
-            	isr_rise();
-            	printf("high edge\n");
+            	//isr_rise();
+            	//printf("high edge\n");
+            	HAL_GPIO_TogglePin(BLUEtest_GPIO_Port, BLUEtest_Pin);
+            	//printf("high edge: %d\n", IR_NEC_Tick);
+            	smleetest++;
             }
 
             if(!HAL_GPIO_ReadPin(evt_rxpin_GPIO_Port, evt_rxpin_Pin)){
                 /* do something */ //low edge
-            	//HAL_GPIO_TogglePin(BLUEtest_GPIO_Port, BLUEtest_Pin);
-            	//HAL_GPIO_WritePin(BLUEtest_GPIO_Port, BLUEtest_Pin, RESET);
-            	isr_fall();
-            	printf("low edge\n");
+            	//isr_fall();
+            	//printf("low edge\n");
+            	HAL_GPIO_TogglePin(BLUEtest_GPIO_Port, BLUEtest_Pin);
+            	//printf("low edge: %d\n", IR_NEC_Tick);
+            	smleetest++;
             }
         }
 }
@@ -379,7 +386,7 @@ void spinonce(void)
 
 
    // HAL_Delay(10000);
-    HAL_Delay(1000);
+    HAL_Delay(2000);
     startTTS();
     //state->set(IDLE);
     ready_flag = 1;
@@ -395,6 +402,7 @@ void spinonce(void)
     TransmitterIR_init();
     ReceiverIR_init();
     //HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);//이걸로 수신시작할 것
+    HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);//이걸로 수신시작할 것
 
     //htim2.Instance->CCR1 = 0;
     //setData(format, robot_standby, 32);
@@ -408,10 +416,11 @@ void spinonce(void)
     		//setData(format, robot_standby, 32);/////must be to make ir_seq
     		sendIRdata(robot_standby);
     		//HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);//이걸로 수신시작할 것
-    		smleetmp = checkIRdata();
-    		printf("hihi: %d\n", smleetmp);
+    		//smleetmp = checkIRdata();
+    		printf("smleetest: %d\n", smleetest);
+    		//printf("hihi: %d\n", smleetmp);
     		if(smleetmp==1){
-    			HAL_GPIO_TogglePin(BLUEtest_GPIO_Port, BLUEtest_Pin);
+    			//HAL_GPIO_TogglePin(BLUEtest_GPIO_Port, BLUEtest_Pin);
     		}
     	}
 
@@ -450,11 +459,11 @@ void spinonce(void)
 			//printf("hihi: %d\n", USS_tick);
 
 			/////////must need USS of fine Tuning/////////
-			USS_start = us_Tick;
-			HAL_GPIO_WritePin(USS_Trigger1_GPIO_Port, USS_Trigger1_Pin, SET);
-			pre_usTick = us_Tick;
-			while(us_Tick == pre_usTick){;}//wait 500us
-			HAL_GPIO_WritePin(USS_Trigger1_GPIO_Port, USS_Trigger1_Pin, RESET);
+//			USS_start = us_Tick;
+//			HAL_GPIO_WritePin(USS_Trigger1_GPIO_Port, USS_Trigger1_Pin, SET);
+//			pre_usTick = us_Tick;
+//			while(us_Tick == pre_usTick){;}//wait 500us
+//			HAL_GPIO_WritePin(USS_Trigger1_GPIO_Port, USS_Trigger1_Pin, RESET);
 
 
 			//printf("sonic value start, end, diff: %d  %d  %d\n", USS_start, USS_end, (USS_end-USS_start));

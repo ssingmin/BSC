@@ -43,6 +43,8 @@ int checkIRdata()
             recv_buf[i] = '0';
         }
         bitcount = getData(NEC, recv_buf, sizeof(recv_buf)*8);
+//        printf(recv_buf);
+//        printf("          hihihihhi\n");
     }
     else if(getState() != Received)
     {

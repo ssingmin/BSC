@@ -133,10 +133,10 @@ int main(void)
   MX_TIM14_Init();
   /* USER CODE BEGIN 2 */
   //HAL_TIM_Base_Start_IT (&htim3);//system timer
-  HAL_TIM_Base_Start_IT (&htim5);//uss timer, 2khz
+  //HAL_TIM_Base_Start_IT (&htim5);//uss timer, 2khz
   HAL_TIM_Base_Start_IT (&htim6);//system timer, 100hz
-  HAL_TIM_Base_Start_IT (&htim7);//uss timer, 1khz
-  HAL_TIM_Base_Start_IT (&htim9);//uss timer, 1779hz
+  //HAL_TIM_Base_Start_IT (&htim7);//uss timer, 1khz
+  HAL_TIM_Base_Start_IT (&htim9);//IR NEC timer, 1779hz
   HAL_TIM_Base_Start_IT (&htim14);//IR NEC timer, 1Mhz
 
 
@@ -502,7 +502,7 @@ static void MX_TIM14_Init(void)
   htim14.Instance = TIM14;
   htim14.Init.Prescaler = 108-1;
   htim14.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim14.Init.Period = 4-1;
+  htim14.Init.Period = 10-1;
   htim14.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim14.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   if (HAL_TIM_Base_Init(&htim14) != HAL_OK)

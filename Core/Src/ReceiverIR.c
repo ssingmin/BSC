@@ -91,7 +91,7 @@ void init_state(void) {
     data.format = UNKNOWN;
     data.bitcount = 0;
     HAL_TIM_Base_Stop_IT(&htim14);printf("HAL_TIM_Base_Stop_IT\n");  //timer.stop();
-    HAL_NVIC_DisableIRQ(EXTI15_10_IRQn); //input interrupt stop
+   // HAL_NVIC_DisableIRQ(EXTI15_10_IRQn); //input interrupt stop
     IR_NEC_Tick = 0;  //timer.reset();
     for (int i = 0; i < sizeof(data.buffer); i++) {
         data.buffer[i] = 0;
@@ -126,21 +126,21 @@ void isr_wdt(void) {
 
 void isr_fall(void) {
     LOCK();
-    printf("111");
+    //printf("111\n");
     switch (work.state) {
         case Idle:
             if (work.c1 < 0) {
-            	printf("222");
-            	HAL_TIM_Base_Start_IT (&htim14);printf("HAL_TIM_Base_Start_IT\n");  //timer.start();
+            	//printf("222\n");
+            	HAL_TIM_Base_Start_IT (&htim14);//printf("HAL_TIM_Base_Start_IT\n");  //timer.start();
                 work.c1 = IR_NEC_Tick;  //timer.read_us();
             } else {
-            	printf("333");
+            	//printf("333\n");
 			work.c3 = IR_NEC_Tick;  //timer.read_us();
                 int a = work.c2 - work.c1;
                 int b = work.c3 - work.c2;
-                printf("c1: %d, c2: %d, c3: %d\n", work.c1, work.c2, work.c3);
+                //printf("c1: %d, c2: %d, c3: %d\n", work.c1, work.c2, work.c3);
                 if (InRange(a, TUS_NEC * 16) && InRange(b, TUS_NEC * 8)) {
-                	printf("444");
+                	//printf("444\n");
                     /*
                      * NEC.
                      */
@@ -148,7 +148,6 @@ void isr_fall(void) {
                     work.state = Receiving;
                     data.bitcount = 0;
                 } else if (InRange(a, TUS_NEC * 16) && InRange(b, TUS_NEC * 4)) {
-                	printf("555");
                 	/*
                      * NEC Repeat.
                      */
@@ -186,6 +185,7 @@ void isr_fall(void) {
             break;
         case Receiving:
             if (NEC == data.format) {
+            	//printf("55555555555555\n");
                 work.d2 = IR_NEC_Tick;  //timer.read_us();
                 int a = work.d2 - work.d1;
                 if (InRange(a, TUS_NEC * 3)) {
@@ -194,6 +194,7 @@ void isr_fall(void) {
                     data.buffer[data.bitcount / 8] &= ~(1 << (data.bitcount % 8));
                 }
                 data.bitcount++;
+                //printf("hihi data.bitcount : %d\n", data.bitcount);
 #if 0
                 /*
                  * Length of NEC is always 32 bits.
@@ -212,7 +213,9 @@ void isr_fall(void) {
                  */
 //                timeout.detach();
 //                timeout.attach_us(this, &isr_timeout, TUS_NEC * 5);
-                isr_timeout_flag = 1;
+                if(data.bitcount==32){
+                	printf("hihi data.bitcount : %d\n", data.bitcount);
+                	isr_timeout_flag = 1;}
 #endif
             } else if (AEHA == data.format) {
                 work.d2 = IR_NEC_Tick;  //timer.read_us();
@@ -335,12 +338,14 @@ void isr_timeout(void) {
            data.bitcount);
 #endif
     if (work.state == Receiving) {
+    	printf("66666666666666\n");
         work.state = Received;
         work.c1 = -1;
         work.c2 = -1;
         work.c3 = -1;
         work.d1 = -1;
         work.d2 = -1;
+        HAL_NVIC_DisableIRQ(EXTI15_10_IRQn); //input interrupt stop
     }
     UNLOCK();
 }
