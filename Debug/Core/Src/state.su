@@ -1,0 +1,3 @@
+../Core/Src/state.c:15:6:initState	4	static
+../Core/Src/state.c:20:6:State_set	16	static
+../Core/Src/state.c:25:12:State_get	4	static

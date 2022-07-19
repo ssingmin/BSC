@@ -21,7 +21,7 @@ extern Format format;
 
 void sendIRdata(uint8_t send_data[])
 {
-    if(getState() == Idle)
+    if(TIR_getState() == Idle)
     {
         //ir_rx->evt.disable_irq();
         setData(NEC, send_data, 32);
@@ -46,18 +46,19 @@ int checkIRdata()
     }
     else if(getState() != Received)
     {
-    	printf("getState() != Received ");
+    	printf("getState() != Received\n");
         return 0;
     }
 
     for(int i = 0; i<4; i++)
     {
-    	printf("hihihihi111111111: ");
-        if(recv_buf[i] == robot_standby[i]) {start_docking_count++;}
-        		//if(recv_buf[i] == start_docking[i]) {start_docking_count++;}
+    	printf("\nhi11: ");
+        if(recv_buf[i] == start_docking[i]) {start_docking_count++;}
         if(recv_buf[i] == finish_docking[i]) {finish_docking_count++;}
         printf("%x : %x\n", recv_buf[i], start_docking[i]);
+        printf("!!start_docking_count: %d\n", start_docking_count);
     }
+
 
     if(start_docking_count == 4)
     {
@@ -68,6 +69,6 @@ int checkIRdata()
         return 2;
     }
 
-    printf("hihihihi22222start_docking_count: %d", start_docking_count);
+    printf("hihihihi22222\n");
         return 0;
 }

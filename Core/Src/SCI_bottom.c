@@ -12,6 +12,7 @@
 #include "RemoteIR.h"
 #include "ReceiverIR.h"
 #include "charging.h"
+#include "state.h"
 
 uint8_t test = 0;
 uint32_t us_Tick = 0;
@@ -58,11 +59,13 @@ uint8_t pir[6];
 SensorState *sensor_state;
 int battery;
 
+
+
 uint8_t ready_flag;
 uint8_t start_docking_flag;
 
-
 int check_msg;
+
 
 
 MotorInfo *motor;
@@ -90,6 +93,9 @@ uint8_t charger_state_temp;
 uint8_t check_docking_temp;
 uint8_t ready_flag;
 
+uint8_t start_docking_flag;
+int ir_count = 0;
+int inhome_check_cnt = 0;;
 //uint8_t recv_buf[32] = {0,};
 
 
@@ -118,10 +124,14 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)//sequence timer. gen
 	  if(TIR_setData_flag){tick();}
 	  if(isr_timeout_flag){
 		  isr_timeout_counter++;
-		  printf("timeoutflag: %d, isr_timeout_counter: %d\n", isr_timeout_flag,isr_timeout_counter);
+		  //printf("timeoutflag: %d, isr_timeout_counter: %d\n", isr_timeout_flag,isr_timeout_counter);
 	  }
 
-	  if(isr_timeout_counter>1){isr_timeout();}
+	  if(isr_timeout_counter>1)//횟수 수정할 것
+	  {
+		  isr_timeout_counter = 0;
+		  isr_timeout();
+	  }
 
   }
 
@@ -372,6 +382,52 @@ void parseState114(uint8_t *msg)
     }
 }
 
+
+int stateReady()//이거 전에 ir통신을 받아야 겠는데?
+{
+	for(inhome_check_cnt=0;inhome_check_cnt<73;inhome_check_cnt++)
+	{
+		    //check_msg = charging->checkIRdata();
+		if(check_msg == 1)
+		{
+			start_docking_flag = 1;
+		}
+
+		if(ir_count++ >= 2)
+		{   HAL_NVIC_DisableIRQ(EXTI15_10_IRQn);
+			sendIRdata(robot_standby);
+			ir_count = 0;
+			//HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);//이걸로 수신시작할 것
+		}
+
+		if(start_docking_flag)
+		{
+		   startTTS();
+		   //State_set(IDLE);
+		   ready_flag = 1;
+		   start_docking_flag = 0;
+		   //mutex.lock();
+		   check_msg = 0;
+		   return 1;
+		   //mutex.unlock();
+		}
+//		else if(inhome_check_cnt > 73)
+//		{
+//			inhome_check_cnt = 0;
+//			endTTS();
+//			//ThisThread::sleep_for(50);
+//			NVIC_SystemReset();
+//		}
+		HAL_GPIO_TogglePin(BLUEtest_GPIO_Port, BLUEtest_Pin);
+		check_msg = checkIRdata();
+		HAL_Delay(100);
+	}
+	endTTS();
+	//ThisThread::sleep_for(50);
+	NVIC_SystemReset();
+    //inhome_check_cnt++;
+}
+
 void spinonce(void)
 {
 
@@ -408,9 +464,14 @@ void spinonce(void)
 
     //htim2.Instance->CCR1 = 0;
     //setData(format, robot_standby, 32);
-    char smleetmp = 0;
+//    char smleetmp = 0;
 //    HAL_UART_Receive_IT(&huart8, rx_data, 2);
     //sendIRdata(robot_standby);
+//    initState();
+
+
+    	stateReady();
+
 	while(1)
 	{
 
@@ -418,21 +479,14 @@ void spinonce(void)
     		toggle_seq = Tick_100ms;
     		HAL_GPIO_TogglePin(REDtest_GPIO_Port, REDtest_Pin);
     		//setData(format, robot_standby, 32);/////must be to make ir_seq
-    		sendIRdata(robot_standby);
+    		//sendIRdata(robot_standby);
     		//HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);//이걸로 수신시작할 것
-    		smleetmp = checkIRdata();
-    		printf("hihi: %d\n", smleetmp);
-    		if(smleetmp==1){
-    			HAL_GPIO_TogglePin(BLUEtest_GPIO_Port, BLUEtest_Pin);
-    			smleetmp = 0;
-    		}
-
-//    		HAL_UART_Transmit(&huart8, robot_standby, 4, 100); //읽어드린 값 터미널로 출력
-//			if(testflag==1){
-//				testflag=0;
-//				HAL_GPIO_TogglePin(BLUEtest_GPIO_Port, BLUEtest_Pin);
-//				printf("ir rev: %d %d %d %d\n", rx_data[0], rx_data[1], rx_data[2], rx_data[3]);
-//			}
+//    		smleetmp = checkIRdata();
+//    		printf("hihi: %d\n", smleetmp);
+//    		if(smleetmp==1){
+//    			HAL_GPIO_TogglePin(BLUEtest_GPIO_Port, BLUEtest_Pin);
+//    			smleetmp = 0;
+//    		}
 
     	}
 
