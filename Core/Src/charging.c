@@ -24,6 +24,7 @@ void sendIRdata(uint8_t send_data[])
     if(TIR_getState() == Idle)
     {
         //ir_rx->evt.disable_irq();
+    	HAL_NVIC_DisableIRQ(EXTI15_10_IRQn);
         setData(NEC, send_data, 32);
         //ir_rx->evt.enable_irq();
     }

@@ -137,7 +137,7 @@ int main(void)
   htim2.Instance->CCR1 = 52;
 
   //HAL_TIM_Base_Start_IT (&htim3);//system timer
-  HAL_TIM_Base_Start_IT (&htim5);//uss timer, 2khz
+  HAL_TIM_Base_Start_IT (&htim5);//uss timer, 300khz
   HAL_TIM_Base_Start_IT (&htim6);//system timer, 100hz
   HAL_TIM_Base_Start_IT (&htim7);//uss timer, 1khz
   HAL_TIM_Base_Start_IT (&htim9);//uss timer, 1779hz
@@ -346,9 +346,9 @@ static void MX_TIM5_Init(void)
 
   /* USER CODE END TIM5_Init 1 */
   htim5.Instance = TIM5;
-  htim5.Init.Prescaler = 108-1;
+  htim5.Init.Prescaler = 9-1;
   htim5.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim5.Init.Period = 500-1;
+  htim5.Init.Period = 160-1;
   htim5.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim5.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   if (HAL_TIM_Base_Init(&htim5) != HAL_OK)

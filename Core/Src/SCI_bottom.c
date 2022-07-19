@@ -14,6 +14,8 @@
 #include "charging.h"
 #include "state.h"
 
+#define debugging 0  //must delete
+
 uint8_t test = 0;
 uint32_t us_Tick = 0;
 uint32_t gTick = 0;
@@ -91,56 +93,46 @@ extern uint8_t battery_full[4];
 
 uint8_t charger_state_temp;
 uint8_t check_docking_temp;
-uint8_t ready_flag;
+uint8_t ready_flag;//remove
 
 uint8_t start_docking_flag;
 int ir_count = 0;
-int inhome_check_cnt = 0;;
-//uint8_t recv_buf[32] = {0,};
-
-
+int inhome_check_cnt = 0;
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)//sequence timer. generate per 1ms
 {
-  if(htim->Instance == TIM5)
+  if(htim->Instance == TIM5)//uss timer, 100khz
   {
 	  us_Tick++;
 	  if(us_Tick>0xffff0000){us_Tick=0;}
   }
 
-  if(htim->Instance == TIM6)
+  if(htim->Instance == TIM6)//system timer, 100hz
   {
 	  gTick++;
 	  if((gTick%10) == 0){Tick_100ms++;}
   }
 
-  if(htim->Instance == TIM7)
+  if(htim->Instance == TIM7)//uss timer, 1khz
   {
 	  USS_tick++;
 	  if(USS_tick>0xffff0000){USS_tick=0;}
   }
 
-  if(htim->Instance == TIM9)
+  if(htim->Instance == TIM9)//uss timer, 1779hz
   {
 	  if(TIR_setData_flag){tick();}
-	  if(isr_timeout_flag){
-		  isr_timeout_counter++;
-		  //printf("timeoutflag: %d, isr_timeout_counter: %d\n", isr_timeout_flag,isr_timeout_counter);
-	  }
+	  if(isr_timeout_flag){isr_timeout_counter++;}
 
 	  if(isr_timeout_counter>1)//횟수 수정할 것
 	  {
 		  isr_timeout_counter = 0;
 		  isr_timeout();
 	  }
-
   }
 
-  if(htim->Instance == TIM14)
+  if(htim->Instance == TIM14)//IR NEC timer, 1Mhz
   {
 	  IR_NEC_Tick+=4;
-	  //printf("%d", IR_NEC_Tick);
-	  //if(IR_NEC_Tick>10) {HAL_GPIO_TogglePin(BLUEtest_GPIO_Port, BLUEtest_Pin);IR_NEC_Tick=0;}
-	  //HAL_GPIO_TogglePin(BLUEtest_GPIO_Port, BLUEtest_Pin);
   }
 }
 
@@ -151,25 +143,9 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
     	USS_end = us_Tick;
     }
 
-//    HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);//이걸로 수신시작할 것
-//    HAL_NVIC_DisableIRQ(EXTI15_10_IRQn);
-
     if(GPIO_Pin == evt_rxpin_Pin){ //check interrupt for specific pin
-            if(HAL_GPIO_ReadPin(evt_rxpin_GPIO_Port, evt_rxpin_Pin)){ //check pin state
-                /* do something */ //high edge
-            	//HAL_GPIO_TogglePin(BLUEtest_GPIO_Port, BLUEtest_Pin);
-            	//HAL_GPIO_WritePin(BLUEtest_GPIO_Port, BLUEtest_Pin, SET);
-            	isr_rise();
-            	//printf("high edge\n");
-            }
-
-            if(!HAL_GPIO_ReadPin(evt_rxpin_GPIO_Port, evt_rxpin_Pin)){
-                /* do something */ //low edge
-            	//HAL_GPIO_TogglePin(BLUEtest_GPIO_Port, BLUEtest_Pin);
-            	//HAL_GPIO_WritePin(BLUEtest_GPIO_Port, BLUEtest_Pin, RESET);
-            	isr_fall();
-            	//printf("low edge\n");
-            }
+            if(HAL_GPIO_ReadPin(evt_rxpin_GPIO_Port, evt_rxpin_Pin)){	isr_rise(); }//high edge
+             if(!HAL_GPIO_ReadPin(evt_rxpin_GPIO_Port, evt_rxpin_Pin)){ isr_fall();}//low edge
         }
 }
 
@@ -394,7 +370,7 @@ int stateReady()//이거 전에 ir통신을 받아야 겠는데?
 		}
 
 		if(ir_count++ >= 2)
-		{   HAL_NVIC_DisableIRQ(EXTI15_10_IRQn);
+		{
 			sendIRdata(robot_standby);
 			ir_count = 0;
 			//HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);//이걸로 수신시작할 것
@@ -423,6 +399,7 @@ int stateReady()//이거 전에 ir통신을 받아야 겠는데?
 		HAL_Delay(100);
 	}
 	endTTS();
+	HAL_Delay(100);
 	//ThisThread::sleep_for(50);
 	NVIC_SystemReset();
     //inhome_check_cnt++;
@@ -437,41 +414,26 @@ void spinonce(void)
 
     uint32_t CanId = 0;
 
-    uint8_t robot_standby[4] = {0xCA, 0x35, 0x9A, 0x65};//RsTb
-
-
 	//CanInit(0x100,0x1104);//filter id, mask
     CanInit(0,0);//filter id, mask
 
 
-   // HAL_Delay(10000);
     HAL_Delay(1000);
-    startTTS();
-    //state->set(IDLE);
-    ready_flag = 1;
+
+    //ready_flag = 1;
     start_docking_flag = 0;
     check_msg = 0;
 
     Format format = NEC;
-    int start_docking_count_tmp = 0;
 
     settingMotor();
     startMotor();
 
     TransmitterIR_init();
     ReceiverIR_init();
-    //HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);//이걸로 수신시작할 것
-
-    //htim2.Instance->CCR1 = 0;
-    //setData(format, robot_standby, 32);
-//    char smleetmp = 0;
-//    HAL_UART_Receive_IT(&huart8, rx_data, 2);
-    //sendIRdata(robot_standby);
-//    initState();
-
-
-    	stateReady();
-
+#if debugging
+    stateReady();
+#endif
 	while(1)
 	{
 
@@ -508,30 +470,20 @@ void spinonce(void)
 		if((Tick_100ms>sendsensor_seq)){
 			sendsensor_seq = Tick_100ms;
 
-			//getData(&format, recv_buf, sizeof(recv_buf)*8);
-//		    for(int i = 0; i<4; i++)
-//		    {
-//		        if(recv_buf[i] == start_docking[i])
-//		        {
-//		            start_docking_count_tmp++;
-//		        }
-//		    }
-//		    if(start_docking_count_tmp == 4){
-//		    	HAL_GPIO_TogglePin(BLUEtest_GPIO_Port, BLUEtest_Pin);
-//		    }
-
-
 			//printf("hihi: %d\n", USS_tick);
 
 			/////////must need USS of fine Tuning/////////
-			USS_start = us_Tick;
+
+			printf("sonic value start, end, diff: %d  %d  %d\n", USS_start, USS_end, (USS_end-USS_start));
+
+
+
 			HAL_GPIO_WritePin(USS_Trigger1_GPIO_Port, USS_Trigger1_Pin, SET);
+			USS_start = us_Tick;//start uss trigger
 			pre_usTick = us_Tick;
-			while(us_Tick == pre_usTick){;}//wait 500us
+			while(us_Tick < pre_usTick+150){;}//wait 500us
 			HAL_GPIO_WritePin(USS_Trigger1_GPIO_Port, USS_Trigger1_Pin, RESET);
 
-
-			//printf("sonic value start, end, diff: %d  %d  %d\n", USS_start, USS_end, (USS_end-USS_start));
 			//////////////////////////////////////////////
 
 			buf[index++] = 0;
@@ -546,8 +498,8 @@ void spinonce(void)
 			sendCan(2002, buf, 8, 1);//test
 			index = 0;
 
-
 		}
+
 		if(FLAG_RxCplt){
     		for(int i=0;i<8;i++){canbuf[i] = g_uCAN_Rx_Data[i];}
     		FLAG_RxCplt=0;
@@ -591,26 +543,13 @@ void spinonce(void)
 					break;
 				}
 			}
-//			  else
-//			  {
-//				  if(msg.id == 6001)
-//				  {
-//					  startTTS();
-//					  state->set(IDLE);
-//					  ready_flag = 1;
-//					  start_docking_flag = 0;
-//				  }
-//			  }
+
+
 			g_tCan_Rx_Header.StdId=0;
 			g_tCan_Rx_Header.ExtId=0;
 			CanId = 0;
 
 		}
-
-
-//		printf("adc value ch1: %d ch2: %d ch3: %d ch4: %d \n",
-//				adcval[0], adcval[1], adcval[2], adcval[3]);
-
 
 	}
 }
