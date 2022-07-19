@@ -81,12 +81,12 @@ int _write(int file, char *ptr, int len)
 	return (len);
 }
 
-uint8_t rx_data[2];
+uint8_t rx_data[5]={0,};
 uint8_t testflag;
+
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
 	if (huart->Instance == UART8) {
-
-		HAL_UART_Receive_IT(&huart8, rx_data, 2);
+		HAL_UART_Receive_IT(&huart8, rx_data, 4);
 		testflag = 1;
 	}
 }
@@ -132,11 +132,15 @@ int main(void)
   MX_TIM9_Init();
   MX_TIM14_Init();
   /* USER CODE BEGIN 2 */
+
+  HAL_TIM_PWM_Start_IT(&htim2, TIM_CHANNEL_1);//38khz ir transmit pwm
+  htim2.Instance->CCR1 = 52;
+
   //HAL_TIM_Base_Start_IT (&htim3);//system timer
-  //HAL_TIM_Base_Start_IT (&htim5);//uss timer, 2khz
+  HAL_TIM_Base_Start_IT (&htim5);//uss timer, 2khz
   HAL_TIM_Base_Start_IT (&htim6);//system timer, 100hz
-  //HAL_TIM_Base_Start_IT (&htim7);//uss timer, 1khz
-  HAL_TIM_Base_Start_IT (&htim9);//IR NEC timer, 1779hz
+  HAL_TIM_Base_Start_IT (&htim7);//uss timer, 1khz
+  HAL_TIM_Base_Start_IT (&htim9);//uss timer, 1779hz
   HAL_TIM_Base_Start_IT (&htim14);//IR NEC timer, 1Mhz
 
 
@@ -151,9 +155,7 @@ int main(void)
 //  HAL_TIMEx_OCN_Start(&htim2, TIM_CHANNEL_1);
 
 
-  HAL_TIM_PWM_Start_IT(&htim2, TIM_CHANNEL_1);
-//
-  htim2.Instance->CCR1 = 100;
+
 //
 //
 //  HAL_UART_Receive_IT(&huart8, rx_data, 2);
@@ -286,9 +288,9 @@ static void MX_TIM2_Init(void)
 
   /* USER CODE END TIM2_Init 1 */
   htim2.Instance = TIM2;
-  htim2.Init.Prescaler = 108-1;
+  htim2.Init.Prescaler = 27-1;
   htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim2.Init.Period = 263-1;
+  htim2.Init.Period = 105-1;
   htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim2.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   if (HAL_TIM_Base_Init(&htim2) != HAL_OK)
@@ -311,7 +313,7 @@ static void MX_TIM2_Init(void)
     Error_Handler();
   }
   sConfigOC.OCMode = TIM_OCMODE_PWM1;
-  sConfigOC.Pulse = 131-1;
+  sConfigOC.Pulse = 52-1;
   sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
   sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
   if (HAL_TIM_PWM_ConfigChannel(&htim2, &sConfigOC, TIM_CHANNEL_1) != HAL_OK)
@@ -502,7 +504,7 @@ static void MX_TIM14_Init(void)
   htim14.Instance = TIM14;
   htim14.Init.Prescaler = 108-1;
   htim14.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim14.Init.Period = 10-1;
+  htim14.Init.Period = 4-1;
   htim14.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim14.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   if (HAL_TIM_Base_Init(&htim14) != HAL_OK)
@@ -531,7 +533,7 @@ static void MX_UART8_Init(void)
 
   /* USER CODE END UART8_Init 1 */
   huart8.Instance = UART8;
-  huart8.Init.BaudRate = 115200;
+  huart8.Init.BaudRate = 9600;
   huart8.Init.WordLength = UART_WORDLENGTH_8B;
   huart8.Init.StopBits = UART_STOPBITS_1;
   huart8.Init.Parity = UART_PARITY_NONE;

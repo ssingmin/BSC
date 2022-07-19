@@ -13,7 +13,7 @@
 #include "main.h"
 
 #define IRDUTY0 htim2.Instance->CCR1 = 0
-#define IRDUTY50 htim2.Instance->CCR1 = 500
+#define IRDUTY50 htim2.Instance->CCR1 = 52
 
 
 extern TIM_HandleTypeDef htim2;

@@ -12,7 +12,7 @@
 
 #define InRange(x,y)   ((((y) * 0.7) < (x)) && ((x) < ((y) * 1.3)))
 
-
+extern uint8_t isr_timeout_counter;
 
     data_t data;
     work_t work;
@@ -90,8 +90,8 @@ void init_state(void) {
     work.state = Idle;
     data.format = UNKNOWN;
     data.bitcount = 0;
-    HAL_TIM_Base_Stop_IT(&htim14);printf("HAL_TIM_Base_Stop_IT\n");  //timer.stop();
-   // HAL_NVIC_DisableIRQ(EXTI15_10_IRQn); //input interrupt stop
+    HAL_TIM_Base_Stop_IT(&htim14);//printf("HAL_TIM_Base_Stop_IT\n");  //timer.stop();
+    //HAL_NVIC_DisableIRQ(EXTI15_10_IRQn); //input interrupt stop
     IR_NEC_Tick = 0;  //timer.reset();
     for (int i = 0; i < sizeof(data.buffer); i++) {
         data.buffer[i] = 0;
@@ -126,7 +126,7 @@ void isr_wdt(void) {
 
 void isr_fall(void) {
     LOCK();
-    //printf("111\n");
+    //printf("111: %d\n", work.state);
     switch (work.state) {
         case Idle:
             if (work.c1 < 0) {
@@ -148,6 +148,7 @@ void isr_fall(void) {
                     work.state = Receiving;
                     data.bitcount = 0;
                 } else if (InRange(a, TUS_NEC * 16) && InRange(b, TUS_NEC * 4)) {
+                	//printf("555");
                 	/*
                      * NEC Repeat.
                      */
@@ -185,7 +186,6 @@ void isr_fall(void) {
             break;
         case Receiving:
             if (NEC == data.format) {
-            	//printf("55555555555555\n");
                 work.d2 = IR_NEC_Tick;  //timer.read_us();
                 int a = work.d2 - work.d1;
                 if (InRange(a, TUS_NEC * 3)) {
@@ -194,7 +194,6 @@ void isr_fall(void) {
                     data.buffer[data.bitcount / 8] &= ~(1 << (data.bitcount % 8));
                 }
                 data.bitcount++;
-                //printf("hihi data.bitcount : %d\n", data.bitcount);
 #if 0
                 /*
                  * Length of NEC is always 32 bits.
@@ -213,9 +212,7 @@ void isr_fall(void) {
                  */
 //                timeout.detach();
 //                timeout.attach_us(this, &isr_timeout, TUS_NEC * 5);
-                if(data.bitcount==32){
-                	printf("hihi data.bitcount : %d\n", data.bitcount);
-                	isr_timeout_flag = 1;}
+                if(data.bitcount>=31){isr_timeout_flag = 1;}
 #endif
             } else if (AEHA == data.format) {
                 work.d2 = IR_NEC_Tick;  //timer.read_us();
@@ -338,14 +335,16 @@ void isr_timeout(void) {
            data.bitcount);
 #endif
     if (work.state == Receiving) {
-    	printf("66666666666666\n");
         work.state = Received;
+        HAL_NVIC_DisableIRQ(EXTI15_10_IRQn); //input interrupt stop
+        isr_timeout_flag = 0;
+  		isr_timeout_counter = 0;
         work.c1 = -1;
         work.c2 = -1;
         work.c3 = -1;
         work.d1 = -1;
         work.d2 = -1;
-        HAL_NVIC_DisableIRQ(EXTI15_10_IRQn); //input interrupt stop
+        //printf("what!!!!!");
     }
     UNLOCK();
 }

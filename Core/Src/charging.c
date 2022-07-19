@@ -43,24 +43,20 @@ int checkIRdata()
             recv_buf[i] = '0';
         }
         bitcount = getData(NEC, recv_buf, sizeof(recv_buf)*8);
-//        printf(recv_buf);
-//        printf("          hihihihhi\n");
     }
     else if(getState() != Received)
     {
+    	printf("getState() != Received ");
         return 0;
     }
 
     for(int i = 0; i<4; i++)
     {
-        if(recv_buf[i] == start_docking[i])
-        {
-            start_docking_count++;
-        }
-        if(recv_buf[i] == finish_docking[i])
-        {
-            finish_docking_count++;
-        }
+    	printf("hihihihi111111111: ");
+        if(recv_buf[i] == robot_standby[i]) {start_docking_count++;}
+        		//if(recv_buf[i] == start_docking[i]) {start_docking_count++;}
+        if(recv_buf[i] == finish_docking[i]) {finish_docking_count++;}
+        printf("%x : %x\n", recv_buf[i], start_docking[i]);
     }
 
     if(start_docking_count == 4)
@@ -71,5 +67,7 @@ int checkIRdata()
     {
         return 2;
     }
-    return 0;
+
+    printf("hihihihi22222start_docking_count: %d", start_docking_count);
+        return 0;
 }
