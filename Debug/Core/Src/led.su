@@ -1,0 +1,2 @@
+../Core/Src/led.c:19:6:turnOn	24	static
+../Core/Src/led.c:29:6:turnOff	8	static

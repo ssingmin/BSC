@@ -19,6 +19,8 @@ Core/Src/SCI_bottom.o: ../Core/Src/SCI_bottom.c ../Core/Inc/main.h \
  ../Drivers/STM32F7xx_HAL_Driver/Inc/stm32f7xx_hal_dma.h \
  ../Drivers/STM32F7xx_HAL_Driver/Inc/stm32f7xx_hal_dma_ex.h \
  ../Drivers/STM32F7xx_HAL_Driver/Inc/stm32f7xx_hal_cortex.h \
+ ../Drivers/STM32F7xx_HAL_Driver/Inc/stm32f7xx_hal_adc.h \
+ ../Drivers/STM32F7xx_HAL_Driver/Inc/stm32f7xx_hal_adc_ex.h \
  ../Drivers/STM32F7xx_HAL_Driver/Inc/stm32f7xx_hal_can.h \
  ../Drivers/STM32F7xx_HAL_Driver/Inc/stm32f7xx_hal_flash.h \
  ../Drivers/STM32F7xx_HAL_Driver/Inc/stm32f7xx_hal_flash_ex.h \
@@ -30,11 +32,12 @@ Core/Src/SCI_bottom.o: ../Core/Src/SCI_bottom.c ../Core/Inc/main.h \
  ../Drivers/STM32F7xx_HAL_Driver/Inc/stm32f7xx_hal_tim_ex.h \
  ../Drivers/STM32F7xx_HAL_Driver/Inc/stm32f7xx_hal_uart.h \
  ../Drivers/STM32F7xx_HAL_Driver/Inc/stm32f7xx_hal_uart_ex.h \
- ../Core/Inc/SCI_bottom.h ../Core/Inc/define.h \
- ../Core/Inc/motor_driver_114.h ../Core/Inc/can.h ../Core/Inc/main.h \
- ../Core/Inc/can.h ../Core/Inc/TransmitterIR.h ../Core/Inc/RemoteIR.h \
- ../Core/Inc/RemoteIR.h ../Core/Inc/ReceiverIR.h ../Core/Inc/charging.h \
- ../Core/Inc/TransmitterIR.h ../Core/Inc/ReceiverIR.h ../Core/Inc/state.h
+ ../Core/Inc/can.h ../Core/Inc/main.h ../Core/Inc/TransmitterIR.h \
+ ../Core/Inc/RemoteIR.h ../Core/Inc/RemoteIR.h ../Core/Inc/ReceiverIR.h \
+ ../Core/Inc/charging.h ../Core/Inc/TransmitterIR.h \
+ ../Core/Inc/ReceiverIR.h ../Core/Inc/state.h ../Core/Inc/SCI_bottom.h \
+ ../Core/Inc/define.h ../Core/Inc/motor_driver_114.h ../Core/Inc/can.h \
+ ../Core/Inc/led.h
 ../Core/Inc/main.h:
 ../Drivers/STM32F7xx_HAL_Driver/Inc/stm32f7xx_hal.h:
 ../Core/Inc/stm32f7xx_hal_conf.h:
@@ -56,6 +59,8 @@ Core/Src/SCI_bottom.o: ../Core/Src/SCI_bottom.c ../Core/Inc/main.h \
 ../Drivers/STM32F7xx_HAL_Driver/Inc/stm32f7xx_hal_dma.h:
 ../Drivers/STM32F7xx_HAL_Driver/Inc/stm32f7xx_hal_dma_ex.h:
 ../Drivers/STM32F7xx_HAL_Driver/Inc/stm32f7xx_hal_cortex.h:
+../Drivers/STM32F7xx_HAL_Driver/Inc/stm32f7xx_hal_adc.h:
+../Drivers/STM32F7xx_HAL_Driver/Inc/stm32f7xx_hal_adc_ex.h:
 ../Drivers/STM32F7xx_HAL_Driver/Inc/stm32f7xx_hal_can.h:
 ../Drivers/STM32F7xx_HAL_Driver/Inc/stm32f7xx_hal_flash.h:
 ../Drivers/STM32F7xx_HAL_Driver/Inc/stm32f7xx_hal_flash_ex.h:
@@ -67,12 +72,8 @@ Core/Src/SCI_bottom.o: ../Core/Src/SCI_bottom.c ../Core/Inc/main.h \
 ../Drivers/STM32F7xx_HAL_Driver/Inc/stm32f7xx_hal_tim_ex.h:
 ../Drivers/STM32F7xx_HAL_Driver/Inc/stm32f7xx_hal_uart.h:
 ../Drivers/STM32F7xx_HAL_Driver/Inc/stm32f7xx_hal_uart_ex.h:
-../Core/Inc/SCI_bottom.h:
-../Core/Inc/define.h:
-../Core/Inc/motor_driver_114.h:
 ../Core/Inc/can.h:
 ../Core/Inc/main.h:
-../Core/Inc/can.h:
 ../Core/Inc/TransmitterIR.h:
 ../Core/Inc/RemoteIR.h:
 ../Core/Inc/RemoteIR.h:
@@ -81,3 +82,8 @@ Core/Src/SCI_bottom.o: ../Core/Src/SCI_bottom.c ../Core/Inc/main.h \
 ../Core/Inc/TransmitterIR.h:
 ../Core/Inc/ReceiverIR.h:
 ../Core/Inc/state.h:
+../Core/Inc/SCI_bottom.h:
+../Core/Inc/define.h:
+../Core/Inc/motor_driver_114.h:
+../Core/Inc/can.h:
+../Core/Inc/led.h:

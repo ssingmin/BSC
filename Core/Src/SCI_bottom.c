@@ -5,7 +5,6 @@
  *      Author: sangmin_lee
  */
 #include "main.h"
-#include "SCI_bottom.h"
 #include <stdint.h>
 #include "can.h"
 #include "TransmitterIR.h"
@@ -13,6 +12,9 @@
 #include "ReceiverIR.h"
 #include "charging.h"
 #include "state.h"
+#include "SCI_bottom.h"
+#include "led.h"
+#include "math.h"
 
 #define debugging 0  //must delete
 
@@ -21,8 +23,11 @@ uint32_t us_Tick = 0;
 uint32_t gTick = 0;
 uint32_t pre_usTick = 0;
 uint32_t Tick_100ms = 0;
+uint32_t Tick_500ms = 0;
+
 uint32_t toggle_seq = 0;
 uint32_t cansend_seq = 0;
+uint32_t FDsen_seq = 0;
 
 uint8_t TIR_setData_flag = 0;
 
@@ -43,9 +48,11 @@ uint8_t motor_sw=1;
 int motor_break;
 int motor_disable_flag;
 
-uint32_t USS_start = 0;
-uint32_t USS_end = 0;
-uint32_t USS_tick = 0;
+int32_t USS_start[6] = {0,};
+int32_t USS_end[6] = {0,};
+int32_t USS_calc[6] = {0,};
+int32_t USS_tmp = 0;
+int32_t USS_tick = 0;
 
 
 int robot_state;
@@ -62,7 +69,6 @@ SensorState *sensor_state;
 int battery;
 
 
-
 uint8_t ready_flag;
 uint8_t start_docking_flag;
 
@@ -71,15 +77,15 @@ int check_msg;
 
 
 MotorInfo *motor;
-SensorState *sensor_state;
-
 extern uint8_t testflag;
 extern uint8_t rx_data[2];
 
 extern uint8_t g_uCAN_Rx_Data[8];
 extern uint32_t FLAG_RxCplt;
 extern TIM_HandleTypeDef htim2;
+extern TIM_HandleTypeDef htim5;
 extern UART_HandleTypeDef huart8;
+extern ADC_HandleTypeDef hadc1;
 
 extern uint8_t recv_buf[32];
 
@@ -91,6 +97,7 @@ extern uint8_t charger_on[4];//
 extern uint8_t charger_off[4];//
 extern uint8_t battery_full[4];
 
+
 uint8_t charger_state_temp;
 uint8_t check_docking_temp;
 uint8_t ready_flag;//remove
@@ -98,18 +105,33 @@ uint8_t ready_flag;//remove
 uint8_t start_docking_flag;
 int ir_count = 0;
 int inhome_check_cnt = 0;
+
+extern RGB green;    //for charging2
+extern RGB skyblue;   //for working, wallfollowing 3, 8
+extern RGB yellow;     //for stop, W_stop 4, 5
+extern RGB red;     //for emergency 6
+extern RGB purple;   //for DOCKING 1
+extern RGB white;      //for manual 7
+extern RGB blue;
+
+uint8_t inhome=0;
+
+
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)//sequence timer. generate per 1ms
 {
   if(htim->Instance == TIM5)//uss timer, 100khz
   {
 	  us_Tick++;
-	  if(us_Tick>0xffff0000){us_Tick=0;}
+//	  if(us_Tick>0xffff0000){us_Tick=0;}
+
   }
 
   if(htim->Instance == TIM6)//system timer, 100hz
   {
 	  gTick++;
 	  if((gTick%10) == 0){Tick_100ms++;}
+	  if((gTick%50) == 0){Tick_500ms++;}
+
   }
 
   if(htim->Instance == TIM7)//uss timer, 1khz
@@ -140,7 +162,8 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)//sequence timer. gen
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
     if(GPIO_Pin == USS_Data1_Pin) {
-    	USS_end = us_Tick;
+    	USS_end[0] = us_Tick;
+    	HAL_TIM_Base_Stop_IT (&htim5);//uss timer, 200khz
     }
 
     if(GPIO_Pin == evt_rxpin_Pin){ //check interrupt for specific pin
@@ -405,6 +428,81 @@ int stateReady()//이거 전에 ir통신을 받아야 겠는데?
     //inhome_check_cnt++;
 }
 
+void stateThread()
+{
+
+        switch(robot_state)
+        {
+            case INIT:
+                turnOff();
+                break;
+
+            case DOCKING:
+                turnOn(white);
+                inhome = 0;
+                break;
+
+            case CHARGING:
+                if(battery>95)
+                {
+                    turnOn(green);
+                }
+                else
+                {
+                    turnOn(yellow);
+                }
+                break;
+
+            case WORKING:
+                turnOn(white);
+                inhome = 0;
+                break;
+
+            case STOP:
+                turnOn(purple);
+                inhome = 0;
+                break;
+
+            case W_STOP:
+                turnOn(purple);
+                break;
+
+            case EMERGENCY:
+                turnOn(red);
+                inhome = 0;
+                break;
+
+            case MANUAL:
+                if(touch)
+                    turnOn(blue);
+                else
+                    turnOn(skyblue);
+                inhome = 0;
+                break;
+
+            case WALL_FOLLOWING:
+                turnOn(white);
+                break;
+            case 10: //debug
+                turnOn(blue);
+                break;
+
+			case 11: //for operation test
+				turnOn(red);
+				break;
+
+			case 12: //for operation test
+				turnOn(green);
+				break;
+
+        }
+//        mutex.lock();
+//        check_msg = charging->checkIRdata();
+//        mutex.unlock();
+//        ThisThread::sleep_for(131);
+
+}
+
 void spinonce(void)
 {
 
@@ -413,7 +511,7 @@ void spinonce(void)
     int index = 0;
 
     uint32_t CanId = 0;
-
+    uint16_t FDval[4]={0,};
 	//CanInit(0x100,0x1104);//filter id, mask
     CanInit(0,0);//filter id, mask
 
@@ -437,19 +535,27 @@ void spinonce(void)
 	while(1)
 	{
 
+
+
+		if(Tick_100ms>FDsen_seq+3) {		//for monitor iteration.
+			FDsen_seq = Tick_100ms;
+
+		    for(int i=0;i<4;i++){
+		    	HAL_ADC_Start(&hadc1);
+				HAL_ADC_PollForConversion(&hadc1, 100);
+				FDval[i] = HAL_ADC_GetValue(&hadc1);
+		    }
+		    HAL_ADC_Stop(&hadc1);
+
+		  //printf("FDval: %d %d %d %d\n", FDval[0], FDval[1], FDval[2], FDval[3]);
+		  //HAL_Delay(100);
+
+
+  	}
+
 		if(Tick_100ms>toggle_seq+5) {		//for monitor iteration.
     		toggle_seq = Tick_100ms;
     		HAL_GPIO_TogglePin(REDtest_GPIO_Port, REDtest_Pin);
-    		//setData(format, robot_standby, 32);/////must be to make ir_seq
-    		//sendIRdata(robot_standby);
-    		//HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);//이걸로 수신시작할 것
-//    		smleetmp = checkIRdata();
-//    		printf("hihi: %d\n", smleetmp);
-//    		if(smleetmp==1){
-//    			HAL_GPIO_TogglePin(BLUEtest_GPIO_Port, BLUEtest_Pin);
-//    			smleetmp = 0;
-//    		}
-
     	}
 
     	if(gTick>controlmotor_seq+4) {		//about controlmotor do it!!!!!
@@ -472,16 +578,25 @@ void spinonce(void)
 
 			//printf("hihi: %d\n", USS_tick);
 
-			/////////must need USS of fine Tuning/////////
+			USS_tmp = USS_end[0]-USS_start[0];
+			USS_calc[0] = (0.0361*(float)USS_tmp)*(0.001*(float)USS_tmp)*(0.001*(float)USS_tmp);//x^3
+			printf("x3[0]: %d \n", USS_calc[0]);
+			USS_calc[0] -= (0.108*(float)USS_tmp)*(0.001*(float)USS_tmp);//x^2
+			printf("x2[0]: %d \n", USS_calc[0]);
+			USS_calc[0] += (0.933*(float)USS_tmp);//x^1
+			printf("x1[0]: %d \n", USS_calc[0]);
+			USS_calc[0] -= 41;//x^0
+			//USS_calc[0]=(USS_end[0]-USS_start[0]);
+			printf("USS_calc[0]: %d \n", USS_calc[0]);
+			USS_calc[0] = 0;
+			//printf("sonic value start, end, diff: %d  %d  %d\n", USS_start[0], USS_end[0], (USS_end[0]-USS_start[0]));
 
-			printf("sonic value start, end, diff: %d  %d  %d\n", USS_start, USS_end, (USS_end-USS_start));
 
-
-
+			HAL_TIM_Base_Start_IT (&htim5);//uss timer, 200khz
 			HAL_GPIO_WritePin(USS_Trigger1_GPIO_Port, USS_Trigger1_Pin, SET);
-			USS_start = us_Tick;//start uss trigger
+			USS_start[0] = us_Tick;//start uss trigger
 			pre_usTick = us_Tick;
-			while(us_Tick < pre_usTick+150){;}//wait 500us
+			while(us_Tick < pre_usTick+30){;}//wait 150us
 			HAL_GPIO_WritePin(USS_Trigger1_GPIO_Port, USS_Trigger1_Pin, RESET);
 
 			//////////////////////////////////////////////
@@ -493,8 +608,11 @@ void spinonce(void)
 			buf[index++] = 0;
 			buf[index++] = 0;
 			buf[index++] = 0;
-			buf[index] = 0;
-
+			for(int i=0; i<4;i++){
+				if(FDval[i]>50){buf[index] |= 1<<i+4;}
+				else {buf[index] |= 0<<i+4;}
+			}
+			//buf[index] = 0;
 			sendCan(2002, buf, 8, 1);//test
 			index = 0;
 

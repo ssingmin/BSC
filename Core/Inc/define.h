@@ -241,4 +241,19 @@ typedef struct _SensorState
     uint8_t air_purifier;
 }SensorState;
 
+enum LED_STATE
+{
+    INIT = 0, // 0
+    DOCKING = 1,// 16
+    CHARGING = 2, // 32
+    WORKING = 3, // 48
+    STOP = 4, // 64
+    W_STOP = 5, // 80
+    EMERGENCY = 6, // 96
+    MANUAL = 7, // 112
+    WALL_FOLLOWING = 8 // 128
+};
+
+
+
 #endif /* INC_DEFINE_H_ */
