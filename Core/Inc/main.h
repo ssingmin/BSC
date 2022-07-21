@@ -59,22 +59,45 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
+#define USS_Trigger6_Pin GPIO_PIN_7
+#define USS_Trigger6_GPIO_Port GPIOF
 #define evt_rxpin_Pin GPIO_PIN_14
 #define evt_rxpin_GPIO_Port GPIOE
 #define evt_rxpin_EXTI_IRQn EXTI15_10_IRQn
 #define REDtest_Pin GPIO_PIN_14
 #define REDtest_GPIO_Port GPIOB
+#define USS_Trigger2_Pin GPIO_PIN_8
+#define USS_Trigger2_GPIO_Port GPIOD
+#define USS_Data2_Pin GPIO_PIN_9
+#define USS_Data2_GPIO_Port GPIOD
+#define USS_Data2_EXTI_IRQn EXTI9_5_IRQn
 #define Rsig_Pin GPIO_PIN_12
 #define Rsig_GPIO_Port GPIOD
 #define Gsig_Pin GPIO_PIN_13
 #define Gsig_GPIO_Port GPIOD
 #define Bsig_Pin GPIO_PIN_14
 #define Bsig_GPIO_Port GPIOD
+#define USS_Trigger5_Pin GPIO_PIN_6
+#define USS_Trigger5_GPIO_Port GPIOC
+#define USS_Data5_Pin GPIO_PIN_7
+#define USS_Data5_GPIO_Port GPIOC
+#define USS_Data5_EXTI_IRQn EXTI9_5_IRQn
+#define USS_Trigger3_Pin GPIO_PIN_10
+#define USS_Trigger3_GPIO_Port GPIOC
+#define USS_Data3_Pin GPIO_PIN_11
+#define USS_Data3_GPIO_Port GPIOC
+#define USS_Data3_EXTI_IRQn EXTI15_10_IRQn
+#define USS_Trigger4_Pin GPIO_PIN_12
+#define USS_Trigger4_GPIO_Port GPIOC
+#define USS_Data4_Pin GPIO_PIN_2
+#define USS_Data4_GPIO_Port GPIOD
 #define USS_Trigger1_Pin GPIO_PIN_5
 #define USS_Trigger1_GPIO_Port GPIOD
 #define USS_Data1_Pin GPIO_PIN_6
 #define USS_Data1_GPIO_Port GPIOD
 #define USS_Data1_EXTI_IRQn EXTI9_5_IRQn
+#define USS_Data6_Pin GPIO_PIN_3
+#define USS_Data6_GPIO_Port GPIOB
 #define BLUEtest_Pin GPIO_PIN_8
 #define BLUEtest_GPIO_Port GPIOB
 /* USER CODE BEGIN Private defines */

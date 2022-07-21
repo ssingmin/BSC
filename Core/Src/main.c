@@ -136,6 +136,10 @@ int main(void)
   MX_TIM9_Init();
   MX_ADC1_Init();
   /* USER CODE BEGIN 2 */
+  HAL_NVIC_SetPriority(EXTI2_IRQn, 0, 0);//direct set
+  HAL_NVIC_EnableIRQ(EXTI2_IRQn);//direct set
+  HAL_NVIC_SetPriority(EXTI3_IRQn, 0, 0);//direct set
+  HAL_NVIC_EnableIRQ(EXTI3_IRQn);//direct set
 
   HAL_TIM_PWM_Start_IT(&htim2, TIM_CHANNEL_1);//38khz ir transmit pwm
   htim2.Instance->CCR1 = 52;
@@ -708,24 +712,24 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOC_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOF, GPIO_PIN_7, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(USS_Trigger6_GPIO_Port, USS_Trigger6_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOB, REDtest_Pin|BLUEtest_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOD, GPIO_PIN_8|Rsig_Pin|Gsig_Pin|Bsig_Pin
+  HAL_GPIO_WritePin(GPIOD, USS_Trigger2_Pin|Rsig_Pin|Gsig_Pin|Bsig_Pin
                           |USS_Trigger1_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_6|GPIO_PIN_10|GPIO_PIN_12, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOC, USS_Trigger5_Pin|USS_Trigger3_Pin|USS_Trigger4_Pin, GPIO_PIN_RESET);
 
-  /*Configure GPIO pin : PF7 */
-  GPIO_InitStruct.Pin = GPIO_PIN_7;
+  /*Configure GPIO pin : USS_Trigger6_Pin */
+  GPIO_InitStruct.Pin = USS_Trigger6_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(GPIOF, &GPIO_InitStruct);
+  HAL_GPIO_Init(USS_Trigger6_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pin : evt_rxpin_Pin */
   GPIO_InitStruct.Pin = evt_rxpin_Pin;
@@ -740,39 +744,39 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : PD8 Rsig_Pin Gsig_Pin Bsig_Pin
+  /*Configure GPIO pins : USS_Trigger2_Pin Rsig_Pin Gsig_Pin Bsig_Pin
                            USS_Trigger1_Pin */
-  GPIO_InitStruct.Pin = GPIO_PIN_8|Rsig_Pin|Gsig_Pin|Bsig_Pin
+  GPIO_InitStruct.Pin = USS_Trigger2_Pin|Rsig_Pin|Gsig_Pin|Bsig_Pin
                           |USS_Trigger1_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : PD9 PD2 */
-  GPIO_InitStruct.Pin = GPIO_PIN_9|GPIO_PIN_2;
+  /*Configure GPIO pins : USS_Data2_Pin USS_Data4_Pin USS_Data1_Pin */
+  GPIO_InitStruct.Pin = USS_Data2_Pin|USS_Data4_Pin|USS_Data1_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : PC6 PC10 PC12 */
-  GPIO_InitStruct.Pin = GPIO_PIN_6|GPIO_PIN_10|GPIO_PIN_12;
+  /*Configure GPIO pins : USS_Trigger5_Pin USS_Trigger3_Pin USS_Trigger4_Pin */
+  GPIO_InitStruct.Pin = USS_Trigger5_Pin|USS_Trigger3_Pin|USS_Trigger4_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : PC7 PC11 */
-  GPIO_InitStruct.Pin = GPIO_PIN_7|GPIO_PIN_11;
-  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
-
-  /*Configure GPIO pin : USS_Data1_Pin */
-  GPIO_InitStruct.Pin = USS_Data1_Pin;
+  /*Configure GPIO pins : USS_Data5_Pin USS_Data3_Pin */
+  GPIO_InitStruct.Pin = USS_Data5_Pin|USS_Data3_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
   GPIO_InitStruct.Pull = GPIO_PULLUP;
-  HAL_GPIO_Init(USS_Data1_GPIO_Port, &GPIO_InitStruct);
+  HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : USS_Data6_Pin */
+  GPIO_InitStruct.Pin = USS_Data6_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
+  HAL_GPIO_Init(USS_Data6_GPIO_Port, &GPIO_InitStruct);
 
   /* EXTI interrupt init*/
   HAL_NVIC_SetPriority(EXTI9_5_IRQn, 0, 0);

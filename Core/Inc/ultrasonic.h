@@ -8,7 +8,7 @@
 #ifndef INC_ULTRASONIC_H_
 #define INC_ULTRASONIC_H_
 
-
+#include <stdint.h>
 
 
 

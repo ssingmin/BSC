@@ -14,7 +14,7 @@
 #include "state.h"
 #include "SCI_bottom.h"
 #include "led.h"
-#include "math.h"
+#include "ultrasonic.h"
 
 #define debugging 0  //must delete
 
@@ -48,11 +48,7 @@ uint8_t motor_sw=1;
 int motor_break;
 int motor_disable_flag;
 
-int32_t USS_start[6] = {0,};
-int32_t USS_end[6] = {0,};
-int32_t USS_calc[6] = {0,};
-int32_t USS_tmp = 0;
-int32_t USS_tick = 0;
+
 
 
 int robot_state;
@@ -96,6 +92,11 @@ extern uint8_t finish_docking[4];//SsEt
 extern uint8_t charger_on[4];//
 extern uint8_t charger_off[4];//
 extern uint8_t battery_full[4];
+
+
+
+extern int32_t USS_tick;
+extern int32_t USS_end[6];
 
 
 uint8_t charger_state_temp;
@@ -165,6 +166,33 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
     	USS_end[0] = us_Tick;
     	HAL_TIM_Base_Stop_IT (&htim5);//uss timer, 200khz
     }
+
+    if(GPIO_Pin == USS_Data2_Pin) {
+    	USS_end[1] = us_Tick;
+    	HAL_TIM_Base_Stop_IT (&htim5);//uss timer, 200khz
+    }
+
+    if(GPIO_Pin == USS_Data3_Pin) {
+    	USS_end[2] = us_Tick;
+    	HAL_TIM_Base_Stop_IT (&htim5);//uss timer, 200khz
+    }
+
+    if(GPIO_Pin == USS_Data4_Pin) {
+    	USS_end[3] = us_Tick;
+    	HAL_TIM_Base_Stop_IT (&htim5);//uss timer, 200khz
+    }
+
+    if(GPIO_Pin == USS_Data5_Pin) {
+    	USS_end[4] = us_Tick;
+    	HAL_TIM_Base_Stop_IT (&htim5);//uss timer, 200khz
+    }
+
+    if(GPIO_Pin == USS_Data6_Pin) {
+    	USS_end[5] = us_Tick;
+    	HAL_TIM_Base_Stop_IT (&htim5);//uss timer, 200khz
+    }
+
+
 
     if(GPIO_Pin == evt_rxpin_Pin){ //check interrupt for specific pin
             if(HAL_GPIO_ReadPin(evt_rxpin_GPIO_Port, evt_rxpin_Pin)){	isr_rise(); }//high edge
@@ -532,6 +560,9 @@ void spinonce(void)
 #if debugging
     stateReady();
 #endif
+
+    //USS_init();
+
 	while(1)
 	{
 
@@ -573,31 +604,33 @@ void spinonce(void)
 
 
 
-		if((Tick_100ms>sendsensor_seq)){
+		if((Tick_100ms>sendsensor_seq+5)){
 			sendsensor_seq = Tick_100ms;
+			for(int i=1;i<7;i++){printf("sonic test %d  ", USSn_DataRead(i));}	printf("\n");
+			//printf("sonic test %d\n", USSn_DataRead(4));
 
-			//printf("hihi: %d\n", USS_tick);
-
-			USS_tmp = USS_end[0]-USS_start[0];
-			USS_calc[0] = (0.0361*(float)USS_tmp)*(0.001*(float)USS_tmp)*(0.001*(float)USS_tmp);//x^3
-			printf("x3[0]: %d \n", USS_calc[0]);
-			USS_calc[0] -= (0.108*(float)USS_tmp)*(0.001*(float)USS_tmp);//x^2
-			printf("x2[0]: %d \n", USS_calc[0]);
-			USS_calc[0] += (0.933*(float)USS_tmp);//x^1
-			printf("x1[0]: %d \n", USS_calc[0]);
-			USS_calc[0] -= 41;//x^0
-			//USS_calc[0]=(USS_end[0]-USS_start[0]);
-			printf("USS_calc[0]: %d \n", USS_calc[0]);
-			USS_calc[0] = 0;
-			//printf("sonic value start, end, diff: %d  %d  %d\n", USS_start[0], USS_end[0], (USS_end[0]-USS_start[0]));
-
-
-			HAL_TIM_Base_Start_IT (&htim5);//uss timer, 200khz
-			HAL_GPIO_WritePin(USS_Trigger1_GPIO_Port, USS_Trigger1_Pin, SET);
-			USS_start[0] = us_Tick;//start uss trigger
-			pre_usTick = us_Tick;
-			while(us_Tick < pre_usTick+30){;}//wait 150us
-			HAL_GPIO_WritePin(USS_Trigger1_GPIO_Port, USS_Trigger1_Pin, RESET);
+//			//printf("hihi: %d\n", USS_tick);
+//
+//			USS_tmp = USS_end[0]-USS_start[0];
+//			USS_calc[0] = (0.0361*(float)USS_tmp)*(0.001*(float)USS_tmp)*(0.001*(float)USS_tmp);//x^3
+//			printf("x3[0]: %d \n", USS_calc[0]);
+//			USS_calc[0] -= (0.108*(float)USS_tmp)*(0.001*(float)USS_tmp);//x^2
+//			printf("x2[0]: %d \n", USS_calc[0]);
+//			USS_calc[0] += (0.933*(float)USS_tmp);//x^1
+//			printf("x1[0]: %d \n", USS_calc[0]);
+//			USS_calc[0] -= 41;//x^0
+//			//USS_calc[0]=(USS_end[0]-USS_start[0]);
+//			printf("USS_calc[0]: %d \n", USS_calc[0]);
+//			USS_calc[0] = 0;
+//			//printf("sonic value start, end, diff: %d  %d  %d\n", USS_start[0], USS_end[0], (USS_end[0]-USS_start[0]));
+//
+//
+//			HAL_TIM_Base_Start_IT (&htim5);//uss timer, 200khz
+//			HAL_GPIO_WritePin(USS_Trigger1_GPIO_Port, USS_Trigger1_Pin, SET);
+//			USS_start[0] = us_Tick;//start uss trigger
+//			pre_usTick = us_Tick;
+//			while(us_Tick < pre_usTick+30){;}//wait 150us
+//			HAL_GPIO_WritePin(USS_Trigger1_GPIO_Port, USS_Trigger1_Pin, RESET);
 
 			//////////////////////////////////////////////
 
