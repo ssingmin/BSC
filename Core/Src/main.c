@@ -51,7 +51,6 @@ TIM_HandleTypeDef htim7;
 TIM_HandleTypeDef htim9;
 TIM_HandleTypeDef htim14;
 
-UART_HandleTypeDef huart8;
 UART_HandleTypeDef huart1;
 
 /* USER CODE BEGIN PV */
@@ -64,7 +63,6 @@ static void MX_GPIO_Init(void);
 static void MX_USART1_UART_Init(void);
 static void MX_CAN1_Init(void);
 static void MX_TIM2_Init(void);
-static void MX_UART8_Init(void);
 static void MX_TIM6_Init(void);
 static void MX_TIM7_Init(void);
 static void MX_TIM5_Init(void);
@@ -98,12 +96,12 @@ int _write(int file, char *ptr, int len)
 uint8_t rx_data[5]={0,};
 uint8_t testflag;
 
-void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
-	if (huart->Instance == UART8) {
-		HAL_UART_Receive_IT(&huart8, rx_data, 4);
-		testflag = 1;
-	}
-}
+//void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {//imu
+//	if (huart->Instance == UART8) {
+//		HAL_UART_Receive_IT(&huart8, rx_data, 4);
+//		testflag = 1;
+//	}
+//}
 
 
 ///////////////////////////////////////////
@@ -139,7 +137,6 @@ int main(void)
   MX_USART1_UART_Init();
   MX_CAN1_Init();
   MX_TIM2_Init();
-  MX_UART8_Init();
   MX_TIM6_Init();
   MX_TIM7_Init();
   MX_TIM5_Init();
@@ -149,8 +146,8 @@ int main(void)
   /* USER CODE BEGIN 2 */
   HAL_NVIC_SetPriority(EXTI2_IRQn, 0, 0);//direct set
   HAL_NVIC_EnableIRQ(EXTI2_IRQn);//direct set
-//  HAL_NVIC_SetPriority(EXTI3_IRQn, 0, 0);//direct set
-//  HAL_NVIC_EnableIRQ(EXTI3_IRQn);//direct set
+  HAL_NVIC_SetPriority(EXTI0_IRQn, 0, 0);//direct set
+  HAL_NVIC_EnableIRQ(EXTI0_IRQn);//direct set
 
   HAL_TIM_PWM_Start_IT(&htim2, TIM_CHANNEL_1);//38khz ir transmit pwm
   htim2.Instance->CCR1 = 52;
@@ -160,7 +157,7 @@ int main(void)
   HAL_TIM_Base_Start_IT (&htim6);//system timer, 100hz
   //HAL_TIM_Base_Start_IT (&htim7);//uss timer, 1khz
   HAL_TIM_Base_Start_IT (&htim9);//uss timer, 1779hz
-  HAL_TIM_Base_Start_IT (&htim14);//IR NEC timer, 1Mhz
+  //HAL_TIM_Base_Start_IT (&htim14);//IR NEC timer, 1Mhz
 
 
   //HAL_ADC_Start_DMA(&hadc1, adcval, 4);
@@ -375,7 +372,7 @@ static void MX_CAN1_Init(void)
   hcan1.Init.TimeTriggeredMode = DISABLE;
   hcan1.Init.AutoBusOff = ENABLE;
   hcan1.Init.AutoWakeUp = DISABLE;
-  hcan1.Init.AutoRetransmission = DISABLE;
+  hcan1.Init.AutoRetransmission = ENABLE;
   hcan1.Init.ReceiveFifoLocked = DISABLE;
   hcan1.Init.TransmitFifoPriority = DISABLE;
   if (HAL_CAN_Init(&hcan1) != HAL_OK)
@@ -638,41 +635,6 @@ static void MX_TIM14_Init(void)
 }
 
 /**
-  * @brief UART8 Initialization Function
-  * @param None
-  * @retval None
-  */
-static void MX_UART8_Init(void)
-{
-
-  /* USER CODE BEGIN UART8_Init 0 */
-
-  /* USER CODE END UART8_Init 0 */
-
-  /* USER CODE BEGIN UART8_Init 1 */
-
-  /* USER CODE END UART8_Init 1 */
-  huart8.Instance = UART8;
-  huart8.Init.BaudRate = 9600;
-  huart8.Init.WordLength = UART_WORDLENGTH_8B;
-  huart8.Init.StopBits = UART_STOPBITS_1;
-  huart8.Init.Parity = UART_PARITY_NONE;
-  huart8.Init.Mode = UART_MODE_TX_RX;
-  huart8.Init.HwFlowCtl = UART_HWCONTROL_NONE;
-  huart8.Init.OverSampling = UART_OVERSAMPLING_16;
-  huart8.Init.OneBitSampling = UART_ONE_BIT_SAMPLE_DISABLE;
-  huart8.AdvancedInit.AdvFeatureInit = UART_ADVFEATURE_NO_INIT;
-  if (HAL_UART_Init(&huart8) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /* USER CODE BEGIN UART8_Init 2 */
-
-  /* USER CODE END UART8_Init 2 */
-
-}
-
-/**
   * @brief USART1 Initialization Function
   * @param None
   * @retval None
@@ -720,10 +682,10 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOF_CLK_ENABLE();
   __HAL_RCC_GPIOH_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
-  __HAL_RCC_GPIOE_CLK_ENABLE();
   __HAL_RCC_GPIOB_CLK_ENABLE();
   __HAL_RCC_GPIOD_CLK_ENABLE();
   __HAL_RCC_GPIOC_CLK_ENABLE();
+  __HAL_RCC_GPIOE_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(USS_Trigger6_GPIO_Port, USS_Trigger6_Pin, GPIO_PIN_RESET);
@@ -744,12 +706,6 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(USS_Trigger6_GPIO_Port, &GPIO_InitStruct);
-
-  /*Configure GPIO pin : evt_rxpin_Pin */
-  GPIO_InitStruct.Pin = evt_rxpin_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING_FALLING;
-  GPIO_InitStruct.Pull = GPIO_PULLUP;
-  HAL_GPIO_Init(evt_rxpin_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pin : USS_Data6_Pin */
   GPIO_InitStruct.Pin = USS_Data6_Pin;
@@ -791,6 +747,12 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
   GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : evt_rxpin_Pin */
+  GPIO_InitStruct.Pin = evt_rxpin_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING_FALLING;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
+  HAL_GPIO_Init(evt_rxpin_GPIO_Port, &GPIO_InitStruct);
 
   /* EXTI interrupt init*/
   HAL_NVIC_SetPriority(EXTI9_5_IRQn, 0, 0);

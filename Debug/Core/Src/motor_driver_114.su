@@ -15,6 +15,6 @@
 ../Core/Src/motor_driver_114.c:276:6:reqEnc	24	static
 ../Core/Src/motor_driver_114.c:292:6:reqState	24	static
 ../Core/Src/motor_driver_114.c:308:6:control	32	static
-../Core/Src/motor_driver_114.c:325:6:settingKP	32	static
-../Core/Src/motor_driver_114.c:346:6:settingKI	32	static
-../Core/Src/motor_driver_114.c:366:6:settingMotor	8	static
+../Core/Src/motor_driver_114.c:326:6:settingKP	32	static
+../Core/Src/motor_driver_114.c:347:6:settingKI	32	static
+../Core/Src/motor_driver_114.c:367:6:settingMotor	8	static

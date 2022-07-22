@@ -61,7 +61,6 @@ extern TIM_HandleTypeDef htim6;
 extern TIM_HandleTypeDef htim7;
 extern TIM_HandleTypeDef htim9;
 extern TIM_HandleTypeDef htim14;
-extern UART_HandleTypeDef huart8;
 /* USER CODE BEGIN EV */
 
 /* USER CODE END EV */
@@ -258,7 +257,6 @@ void EXTI15_10_IRQHandler(void)
   /* USER CODE END EXTI15_10_IRQn 0 */
   HAL_GPIO_EXTI_IRQHandler(USS_Data3_Pin);
   HAL_GPIO_EXTI_IRQHandler(USS_Data6_Pin);
-  HAL_GPIO_EXTI_IRQHandler(evt_rxpin_Pin);
   /* USER CODE BEGIN EXTI15_10_IRQn 1 */
 
   /* USER CODE END EXTI15_10_IRQn 1 */
@@ -320,28 +318,14 @@ void TIM7_IRQHandler(void)
   /* USER CODE END TIM7_IRQn 1 */
 }
 
-/**
-  * @brief This function handles UART8 global interrupt.
-  */
-void UART8_IRQHandler(void)
-{
-  /* USER CODE BEGIN UART8_IRQn 0 */
-
-  /* USER CODE END UART8_IRQn 0 */
-  HAL_UART_IRQHandler(&huart8);
-  /* USER CODE BEGIN UART8_IRQn 1 */
-
-  /* USER CODE END UART8_IRQn 1 */
-}
-
 /* USER CODE BEGIN 1 */
 void EXTI2_IRQHandler(void)
 {
     HAL_GPIO_EXTI_IRQHandler(USS_Data4_Pin);
 }
-//void EXTI3_IRQHandler(void)
-//{
-//    HAL_GPIO_EXTI_IRQHandler(USS_Data6_Pin);
-//}
+void EXTI0_IRQHandler(void)
+{
+    HAL_GPIO_EXTI_IRQHandler(evt_rxpin_Pin);
+}
 
 /* USER CODE END 1 */

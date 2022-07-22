@@ -318,6 +318,7 @@ void control(int16_t lrpm,int16_t rrpm)
     buf[index++] = (lrpm>>8) & 0xff;
     buf[index++] = rrpm & 0xff;
     buf[index] = (rrpm>>8) & 0xff;
+    printf("hihi swv\n");
     sendCan(MOTOR114_REQ_ID, buf, 8, 0);
 //    can->sendMsg(MOTOR114_REQ_ID,buf,false);
 }
