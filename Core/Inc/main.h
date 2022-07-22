@@ -96,8 +96,6 @@ void Error_Handler(void);
 #define USS_Data1_Pin GPIO_PIN_6
 #define USS_Data1_GPIO_Port GPIOD
 #define USS_Data1_EXTI_IRQn EXTI9_5_IRQn
-#define USS_Data6_Pin GPIO_PIN_3
-#define USS_Data6_GPIO_Port GPIOB
 #define BLUEtest_Pin GPIO_PIN_8
 #define BLUEtest_GPIO_Port GPIOB
 /* USER CODE BEGIN Private defines */

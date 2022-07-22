@@ -187,10 +187,10 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
     	HAL_TIM_Base_Stop_IT (&htim5);//uss timer, 200khz
     }
 
-    if(GPIO_Pin == USS_Data6_Pin) {
-    	USS_end[5] = us_Tick;
-    	HAL_TIM_Base_Stop_IT (&htim5);//uss timer, 200khz
-    }
+//    if(GPIO_Pin == USS_Data6_Pin) {
+//    	USS_end[5] = us_Tick;
+//    	HAL_TIM_Base_Stop_IT (&htim5);//uss timer, 200khz
+//    }
 
 
 
@@ -289,7 +289,7 @@ void controlMotor()
         }
         else if(motor_break == 2)
         {
-            count ++;
+            count++;
             control((int)motor->cmd_motor_rpm_left,(int)motor->cmd_motor_rpm_right);
             if(count == 20)
                 motor_break = 3;
@@ -584,7 +584,7 @@ void spinonce(void)
     CanInit(0,0);//filter id, mask
 
 
-    HAL_Delay(1000);
+    HAL_Delay(4000);//must set more 4s
 
     //ready_flag = 1;
     start_docking_flag = 0;

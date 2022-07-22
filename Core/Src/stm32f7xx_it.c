@@ -338,9 +338,9 @@ void EXTI2_IRQHandler(void)
 {
     HAL_GPIO_EXTI_IRQHandler(USS_Data4_Pin);
 }
-void EXTI3_IRQHandler(void)
-{
-    HAL_GPIO_EXTI_IRQHandler(USS_Data6_Pin);
-}
+//void EXTI3_IRQHandler(void)
+//{
+//    HAL_GPIO_EXTI_IRQHandler(USS_Data6_Pin);
+//}
 
 /* USER CODE END 1 */

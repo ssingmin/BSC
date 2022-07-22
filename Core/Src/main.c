@@ -78,11 +78,22 @@ static void MX_ADC1_Init(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 /////for printf, must declare in main.c/////
+//int _write(int file, char *ptr, int len)
+//{
+//	HAL_UART_Transmit(&huart1, (uint8_t *)ptr, (uint16_t)len, 100);
+//	return (len);
+//}
+
+
 int _write(int file, char *ptr, int len)
 {
-	HAL_UART_Transmit(&huart1, (uint8_t *)ptr, (uint16_t)len, 100);
-	return (len);
+	for(int i = 0; i < len; i++)
+	{
+		ITM_SendChar(*ptr++);
+	}
+	return len;
 }
+
 
 uint8_t rx_data[5]={0,};
 uint8_t testflag;
@@ -138,8 +149,8 @@ int main(void)
   /* USER CODE BEGIN 2 */
   HAL_NVIC_SetPriority(EXTI2_IRQn, 0, 0);//direct set
   HAL_NVIC_EnableIRQ(EXTI2_IRQn);//direct set
-  HAL_NVIC_SetPriority(EXTI3_IRQn, 0, 0);//direct set
-  HAL_NVIC_EnableIRQ(EXTI3_IRQn);//direct set
+//  HAL_NVIC_SetPriority(EXTI3_IRQn, 0, 0);//direct set
+//  HAL_NVIC_EnableIRQ(EXTI3_IRQn);//direct set
 
   HAL_TIM_PWM_Start_IT(&htim2, TIM_CHANNEL_1);//38khz ir transmit pwm
   htim2.Instance->CCR1 = 52;
@@ -174,6 +185,9 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+
+	  printf("swo printfhihi\n");
+	  HAL_Delay(500);
 //	    HAL_ADC_Start(&hadc1);
 //	    HAL_ADC_PollForConversion(&hadc1, 100);
 //	    FDval[0] = HAL_ADC_GetValue(&hadc1);
@@ -197,9 +211,9 @@ int main(void)
 //	  printf("%d %d %d %d\n", adcval[0], adcval[1], adcval[2], adcval[3]);
 	  //HAL_GPIO_TogglePin(REDtest_GPIO_Port, REDtest_Pin);
 //	  if(testflag == 1){HAL_GPIO_TogglePin(BLUEtest_GPIO_Port, BLUEtest_Pin);testflag=0;}
-//	  printf("SystemCoreClock is %d Hz\r\n", SystemCoreClock);
-	  //HAL_Delay(200);
-	  spinonce();
+	  //printf("SystemCoreClock is %d Hz\r\n", SystemCoreClock);
+	  HAL_Delay(200);
+	  //spinonce();
 
   }
   /* USER CODE END 3 */
@@ -771,12 +785,6 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
   GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
-
-  /*Configure GPIO pin : USS_Data6_Pin */
-  GPIO_InitStruct.Pin = USS_Data6_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
-  GPIO_InitStruct.Pull = GPIO_PULLUP;
-  HAL_GPIO_Init(USS_Data6_GPIO_Port, &GPIO_InitStruct);
 
   /* EXTI interrupt init*/
   HAL_NVIC_SetPriority(EXTI9_5_IRQn, 0, 0);
