@@ -11,9 +11,9 @@
 ../Core/Src/stm32f7xx_it.c:224:6:EXTI9_5_IRQHandler	8	static
 ../Core/Src/stm32f7xx_it.c:240:6:TIM1_BRK_TIM9_IRQHandler	8	static
 ../Core/Src/stm32f7xx_it.c:254:6:EXTI15_10_IRQHandler	8	static
-../Core/Src/stm32f7xx_it.c:269:6:TIM8_TRG_COM_TIM14_IRQHandler	8	static
-../Core/Src/stm32f7xx_it.c:283:6:TIM5_IRQHandler	8	static
-../Core/Src/stm32f7xx_it.c:297:6:TIM6_DAC_IRQHandler	8	static
-../Core/Src/stm32f7xx_it.c:311:6:TIM7_IRQHandler	8	static
-../Core/Src/stm32f7xx_it.c:325:6:UART8_IRQHandler	8	static
-../Core/Src/stm32f7xx_it.c:337:6:EXTI2_IRQHandler	8	static
+../Core/Src/stm32f7xx_it.c:270:6:TIM8_TRG_COM_TIM14_IRQHandler	8	static
+../Core/Src/stm32f7xx_it.c:284:6:TIM5_IRQHandler	8	static
+../Core/Src/stm32f7xx_it.c:298:6:TIM6_DAC_IRQHandler	8	static
+../Core/Src/stm32f7xx_it.c:312:6:TIM7_IRQHandler	8	static
+../Core/Src/stm32f7xx_it.c:326:6:UART8_IRQHandler	8	static
+../Core/Src/stm32f7xx_it.c:338:6:EXTI2_IRQHandler	8	static

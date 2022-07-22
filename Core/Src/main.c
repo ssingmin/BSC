@@ -186,8 +186,8 @@ int main(void)
 
     /* USER CODE BEGIN 3 */
 
-	  printf("swo printfhihi\n");
-	  HAL_Delay(500);
+	  //printf("swo printfhihi\n");
+	  //HAL_Delay(500);
 //	    HAL_ADC_Start(&hadc1);
 //	    HAL_ADC_PollForConversion(&hadc1, 100);
 //	    FDval[0] = HAL_ADC_GetValue(&hadc1);
@@ -212,8 +212,8 @@ int main(void)
 	  //HAL_GPIO_TogglePin(REDtest_GPIO_Port, REDtest_Pin);
 //	  if(testflag == 1){HAL_GPIO_TogglePin(BLUEtest_GPIO_Port, BLUEtest_Pin);testflag=0;}
 	  //printf("SystemCoreClock is %d Hz\r\n", SystemCoreClock);
-	  HAL_Delay(200);
-	  //spinonce();
+	  //HAL_Delay(200);
+	  spinonce();
 
   }
   /* USER CODE END 3 */
@@ -750,6 +750,12 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING_FALLING;
   GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(evt_rxpin_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : USS_Data6_Pin */
+  GPIO_InitStruct.Pin = USS_Data6_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
+  HAL_GPIO_Init(USS_Data6_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pins : REDtest_Pin BLUEtest_Pin */
   GPIO_InitStruct.Pin = REDtest_Pin|BLUEtest_Pin;

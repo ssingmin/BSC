@@ -16,7 +16,7 @@
 #include "led.h"
 #include "ultrasonic.h"
 
-#define debugging 1//must delete 0=debug 1=release
+#define debugging 0//must delete 0=debug 1=release
 
 uint8_t test = 0;
 uint32_t us_Tick = 0;
@@ -187,10 +187,10 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
     	HAL_TIM_Base_Stop_IT (&htim5);//uss timer, 200khz
     }
 
-//    if(GPIO_Pin == USS_Data6_Pin) {
-//    	USS_end[5] = us_Tick;
-//    	HAL_TIM_Base_Stop_IT (&htim5);//uss timer, 200khz
-//    }
+    if(GPIO_Pin == USS_Data6_Pin) {
+    	USS_end[5] = us_Tick;
+    	HAL_TIM_Base_Stop_IT (&htim5);//uss timer, 200khz
+    }
 
 
 

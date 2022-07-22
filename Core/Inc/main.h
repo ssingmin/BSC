@@ -64,6 +64,9 @@ void Error_Handler(void);
 #define evt_rxpin_Pin GPIO_PIN_14
 #define evt_rxpin_GPIO_Port GPIOE
 #define evt_rxpin_EXTI_IRQn EXTI15_10_IRQn
+#define USS_Data6_Pin GPIO_PIN_12
+#define USS_Data6_GPIO_Port GPIOB
+#define USS_Data6_EXTI_IRQn EXTI15_10_IRQn
 #define REDtest_Pin GPIO_PIN_14
 #define REDtest_GPIO_Port GPIOB
 #define USS_Trigger2_Pin GPIO_PIN_8
