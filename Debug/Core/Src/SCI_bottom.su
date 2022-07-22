@@ -16,4 +16,5 @@
 ../Core/Src/SCI_bottom.c:401:6:parseState114	16	static
 ../Core/Src/SCI_bottom.c:413:5:stateReady	8	static
 ../Core/Src/SCI_bottom.c:459:6:stateThread	8	static
-../Core/Src/SCI_bottom.c:534:6:spinonce	64	static
+../Core/Src/SCI_bottom.c:535:6:stateIdle	8	static
+../Core/Src/SCI_bottom.c:574:6:spinonce	72	static

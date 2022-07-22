@@ -147,7 +147,7 @@ int main(void)
   //HAL_TIM_Base_Start_IT (&htim3);//system timer
   //HAL_TIM_Base_Start_IT (&htim5);//uss timer, 200khz
   HAL_TIM_Base_Start_IT (&htim6);//system timer, 100hz
-  HAL_TIM_Base_Start_IT (&htim7);//uss timer, 1khz
+  //HAL_TIM_Base_Start_IT (&htim7);//uss timer, 1khz
   HAL_TIM_Base_Start_IT (&htim9);//uss timer, 1779hz
   HAL_TIM_Base_Start_IT (&htim14);//IR NEC timer, 1Mhz
 

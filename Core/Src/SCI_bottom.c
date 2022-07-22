@@ -16,7 +16,7 @@
 #include "led.h"
 #include "ultrasonic.h"
 
-#define debugging 0  //must delete
+#define debugging 1//must delete 0=debug 1=release
 
 uint8_t test = 0;
 uint32_t us_Tick = 0;
@@ -116,7 +116,7 @@ extern RGB white;      //for manual 7
 extern RGB blue;
 
 uint8_t inhome=0;
-
+int ir_count_idle = 0;
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)//sequence timer. generate per 1ms
 {
@@ -531,6 +531,46 @@ void stateThread()
 
 }
 
+
+void stateIdle()
+{
+    //int check_msg = 0;
+    //check_msg = charging->checkIRdata();
+
+    if(robot_state == CHARGING)
+    {
+        if(ir_count_idle++ >= 2)
+        {
+            if(charger_sw == 1)
+            {
+                // charging->sendIRdata(charger_on);
+            }
+            else if(charger_sw == 0)
+            {
+                // charging->sendIRdata(charger_off);
+            }
+
+            if(battery>=95)
+            {
+                sendIRdata(battery_full);
+            }
+            ir_count_idle = 0;
+        }
+    }
+    else
+    {
+        check_msg = 0;
+    }
+
+    if(check_msg == 2)
+    {
+        inhome = 1;
+
+    }
+
+}
+
+
 void spinonce(void)
 {
 
@@ -566,8 +606,6 @@ void spinonce(void)
 	while(1)
 	{
 
-
-
 		if(Tick_100ms>FDsen_seq+3) {		//for monitor iteration.
 			FDsen_seq = Tick_100ms;
 
@@ -601,10 +639,13 @@ void spinonce(void)
     		if((reqmotor_seq%8) == 0){reqEnc();}
     		else{reqState();}
     	}
+		if(Tick_100ms>toggle_seq+9) {
+    		toggle_seq = Tick_100ms;
+        	stateIdle();
+    	}
 
 
-
-		if((Tick_100ms>sendsensor_seq+5)){
+		if((Tick_100ms>sendsensor_seq+2)){
 			sendsensor_seq = Tick_100ms;
 			for(int i=1;i<7;i++){printf("sonic test %d  ", USSn_DataRead(i));}	printf("\n");
 			//printf("sonic test %d\n", USSn_DataRead(4));
@@ -633,14 +674,17 @@ void spinonce(void)
 //			HAL_GPIO_WritePin(USS_Trigger1_GPIO_Port, USS_Trigger1_Pin, RESET);
 
 			//////////////////////////////////////////////
+			if(sendsensor_seq%2==1){for(int i=1;i<7;i+=2){buf[i] = USSn_DataRead(i);}}
+			else {for(int i=2;i<7;i+=2){buf[i] = USSn_DataRead(i);}}
+//			buf[index++] = 0;
+//			buf[index++] = 0;
+//			buf[index++] = 0;
+//			buf[index++] = 0;
+//			buf[index++] = 0;
+//			buf[index++] = 0;
+//			buf[index++] = 0;
+			buf[6] = inhome << 1;
 
-			buf[index++] = 0;
-			buf[index++] = 0;
-			buf[index++] = 0;
-			buf[index++] = 0;
-			buf[index++] = 0;
-			buf[index++] = 0;
-			buf[index++] = 0;
 			for(int i=0; i<4;i++){
 				if(FDval[i]>50){buf[index] |= 1<<i+4;}
 				else {buf[index] |= 0<<i+4;}
