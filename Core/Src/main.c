@@ -694,7 +694,7 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_WritePin(GPIOB, REDtest_Pin|BLUEtest_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOD, USS_Trigger2_Pin|Rsig_Pin|Gsig_Pin|Bsig_Pin
+  HAL_GPIO_WritePin(GPIOD, USS_Trigger2_Pin|Gsig_Pin|Rsig_Pin|Bsig_Pin
                           |USS_Trigger1_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
@@ -720,9 +720,9 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : USS_Trigger2_Pin Rsig_Pin Gsig_Pin Bsig_Pin
+  /*Configure GPIO pins : USS_Trigger2_Pin Gsig_Pin Rsig_Pin Bsig_Pin
                            USS_Trigger1_Pin */
-  GPIO_InitStruct.Pin = USS_Trigger2_Pin|Rsig_Pin|Gsig_Pin|Bsig_Pin
+  GPIO_InitStruct.Pin = USS_Trigger2_Pin|Gsig_Pin|Rsig_Pin|Bsig_Pin
                           |USS_Trigger1_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;

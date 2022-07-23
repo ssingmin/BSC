@@ -463,13 +463,11 @@ HAL_StatusTypeDef HAL_TIM_Base_Start_IT(TIM_HandleTypeDef *htim)
   uint32_t tmpsmcr;
 
   /* Check the parameters */
-  //printf("assert_param1: %d\n",htim->Instance);
   assert_param(IS_TIM_INSTANCE(htim->Instance));
-  //printf("assert_param2: %d\n",htim->Instance);
+
   /* Check the TIM state */
   if (htim->State != HAL_TIM_STATE_READY)
   {
-	  //printf("HAL_ERROR: %d\n",htim->Instance);
     return HAL_ERROR;
   }
 
@@ -494,7 +492,6 @@ HAL_StatusTypeDef HAL_TIM_Base_Start_IT(TIM_HandleTypeDef *htim)
   }
 
   /* Return function status */
-  //printf("HAL_OK: %d\n", htim->Instance);
   return HAL_OK;
 }
 

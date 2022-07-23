@@ -20,16 +20,16 @@ void turnOn(RGB rgb)
 {
     if(rgb.red == 1) {HAL_GPIO_WritePin(Rsig_GPIO_Port, Rsig_Pin, SET);}
     else {HAL_GPIO_WritePin(Rsig_GPIO_Port, Rsig_Pin, RESET);}
-    if(rgb.green == 1) {HAL_GPIO_WritePin(Rsig_GPIO_Port, Gsig_Pin, SET);}
-    else {HAL_GPIO_WritePin(Rsig_GPIO_Port, Gsig_Pin, RESET);}
-    if(rgb.blue == 1) {HAL_GPIO_WritePin(Rsig_GPIO_Port, Bsig_Pin, SET);}
-    else {HAL_GPIO_WritePin(Rsig_GPIO_Port, Bsig_Pin, RESET);}
+    if(rgb.green == 1) {HAL_GPIO_WritePin(Gsig_GPIO_Port, Gsig_Pin, SET);}
+    else {HAL_GPIO_WritePin(Gsig_GPIO_Port, Gsig_Pin, RESET);}
+    if(rgb.blue == 1) {HAL_GPIO_WritePin(Bsig_GPIO_Port, Bsig_Pin, SET);}
+    else {HAL_GPIO_WritePin(Bsig_GPIO_Port, Bsig_Pin, RESET);}
 }
 
 void turnOff()
 {
     HAL_GPIO_WritePin(Rsig_GPIO_Port, Rsig_Pin, RESET);
-    HAL_GPIO_WritePin(Rsig_GPIO_Port, Gsig_Pin, RESET);
-    HAL_GPIO_WritePin(Rsig_GPIO_Port, Bsig_Pin, RESET);
+    HAL_GPIO_WritePin(Gsig_GPIO_Port, Gsig_Pin, RESET);
+    HAL_GPIO_WritePin(Bsig_GPIO_Port, Bsig_Pin, RESET);
 }
 

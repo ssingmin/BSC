@@ -25,6 +25,7 @@ uint32_t pre_usTick = 0;
 uint32_t Tick_100ms = 0;
 uint32_t Tick_500ms = 0;
 
+
 uint32_t toggle_seq = 0;
 uint32_t state_seq = 0;
 uint32_t cansend_seq = 0;
@@ -44,7 +45,7 @@ uint32_t sendsensor_seq = 0;
 uint32_t controlmotor_seq = 0;
 
 uint32_t reqmotor_seq = 0;
-
+uint8_t reqmotor_toggle = 0;
 uint8_t motor_sw=1;
 int motor_break;
 int motor_disable_flag;
@@ -426,10 +427,19 @@ int stateReady()//이거 전에 ir통신을 받아야 겠는데?
 {
 	for(inhome_check_cnt=0;inhome_check_cnt<73;inhome_check_cnt++)
 	{
+		HAL_CAN_GetRxMessage(&hcan1, CAN_RX_FIFO0, &g_tCan_Rx_Header, g_uCAN_Rx_Data);
+		if(g_tCan_Rx_Header.ExtId == 6001){
+			check_msg = 1;
+			printf("unlock!!!!unlock!!!!unlock!!!!unlock!!!!\n");
+		}
+
+
 		    //check_msg = charging->checkIRdata();
 		if(check_msg == 1)
 		{
 			start_docking_flag = 1;
+//			sendIRdata(robot_standby);
+//			HAL_NVIC_EnableIRQ(EXTI0_IRQn);//이걸로 수신시작할 것
 		}
 
 		if(ir_count++ >= 2)
@@ -568,7 +578,7 @@ void stateIdle()
 
             if(battery>=95)
             {
-                //sendIRdata(battery_full);
+                sendIRdata(battery_full);//나중에 타이머 잘 끄는지 꼭확인
             }
             ir_count_idle = 0;
         }
@@ -618,7 +628,7 @@ void spinonce(void)
 
 #if debugging
     stateReady();
-    HAL_Delay(10000);
+    HAL_Delay(1000);
 
 #else
     ready_flag = 1;
@@ -632,14 +642,14 @@ void spinonce(void)
 
 		if(Tick_100ms>FDsen_seq+10) {		//for monitor iteration.
 			FDsen_seq = Tick_100ms;
-			printf("flag8\n");
+			//printf("flag8\n");
 		    for(int i=0;i<4;i++){
 		    	HAL_ADC_Start(&hadc1);
 				HAL_ADC_PollForConversion(&hadc1, 100);
 				FDval[i] = HAL_ADC_GetValue(&hadc1);
 		    }
 		    HAL_ADC_Stop(&hadc1);
-		    printf("flag9\n");
+		    //printf("flag9\n");
 		  //printf("FDval: %d %d %d %d\n", FDval[0], FDval[1], FDval[2], FDval[3]);
 		  //HAL_Delay(100);
 
@@ -649,7 +659,8 @@ void spinonce(void)
 		if(Tick_100ms>toggle_seq+5) {		//for monitor iteration.
     		toggle_seq = Tick_100ms;
     		HAL_GPIO_TogglePin(REDtest_GPIO_Port, REDtest_Pin);
-
+    		stateIdle();
+    		stateThread();
     		printf("redtest\n");
     	}
 
@@ -658,26 +669,27 @@ void spinonce(void)
     		//printf("hihi");
     		controlMotor();
             sendEnc(CANID3);
-            printf("controlmotor_seq%d\n", gTick);
+            //printf("controlmotor_seq%d\n", gTick);
     	}
     	if(gTick>reqmotor_seq+3) {		//REQ MOTOR
     		reqmotor_seq = gTick;
-
-    		if((reqmotor_seq%8) == 0){reqEnc();}
-    		else{reqState();}
+    		reqmotor_toggle ^= 1;
+    		printf("reqmotor_seq: %d\n", reqmotor_seq);
+    		if(reqmotor_toggle){reqEnc();printf("reqEnc() ");}
+    		else{reqState();printf("reqState()\n");}
     	}
-		if(Tick_100ms>state_seq+9) {
-			state_seq = Tick_100ms;
-        	stateIdle();
-        	//turnOn(white);
-    		stateThread();
-
-    	}
+//		if(Tick_100ms>state_seq+7) {
+//			state_seq = Tick_100ms;
+//        	stateIdle();
+//        	//turnOn(white);
+//    		stateThread();
+//
+//    	}
 
 
 		if((Tick_100ms>sendsensor_seq+5)){
 			sendsensor_seq = Tick_100ms;
-			printf("flag1\n");
+			//printf("flag1\n");
 			//for(int i=1;i<7;i++){printf("sonic test %d  ", USSn_DataRead(i));}	printf("\n");
 			//printf("sonic test %d\n", USSn_DataRead(4));
 
@@ -708,11 +720,11 @@ void spinonce(void)
 			if(sendsensor_seq%2==1){
 				for(int i=1;i<7;i+=2){
 				buf[i-1] = USSn_DataRead(i);
-				printf("flag111\n");
+				//printf("flag111\n");
 				}
 			}
 			else {for(int i=2;i<7;i+=2){
-				buf[i-1] = USSn_DataRead(i);printf("flag211\n");
+				buf[i-1] = USSn_DataRead(i);//printf("flag211\n");
 			}
 			}
 
@@ -730,33 +742,33 @@ void spinonce(void)
 //			buf[index++] = 0;
 //			buf[index++] = 0;
 			buf[6] = inhome << 1;
-			printf("flag11\n");
+			//printf("flag11\n");
 			for(int i=0; i<4;i++){
 				if(FDval[i]>50){buf[index] |= 1<<i+4;}
 				else {buf[index] |= 0<<i+4;}
 			}
 			//buf[index] = 0;
-			printf("flag12\n");
+			//printf("flag12\n");
 			sendCan(CANID4, buf, 8, 1);//test
-			printf("flag13\n");
+			//printf("flag13\n");
 			index = 0;
-			printf("flag2\n");
+			//printf("flag2\n");
 		}
 
 		if(FLAG_RxCplt>0){
-			printf("flag3\n");
+			//printf("flag3\n");
     		for(int i=0;i<8;i++){canbuf[i] = g_uCAN_Rx_Data[i];}
     		FLAG_RxCplt--;
 			if(g_tCan_Rx_Header.StdId>g_tCan_Rx_Header.ExtId){CanId = g_tCan_Rx_Header.StdId;}
 			else {CanId = g_tCan_Rx_Header.ExtId;}
 			if(CanId==1001){printf("canid1001 ready: %d\n", ready_flag);}
-			printf("canid ready: %d\n", ready_flag);
+			//printf("canid ready: %d\n", ready_flag);
 			if(ready_flag)
 			{
-				printf("flag4\n");
+				//printf("flag4\n");
 				switch(CanId)
 				{
-				printf("flag5\n");
+				//printf("flag5\n");
 				case CANID1:
 					parseCmdvel(canbuf);
 					printf("parseCmdvel\n");
@@ -783,19 +795,23 @@ void spinonce(void)
 
 					if(canbuf[1] == 0x6c && canbuf[2] == 0x60)
 						parseEnc114(canbuf);
+                        printf("parseEnc114(canbuf)\n");
 					if(canbuf[1] == 0x3f && canbuf[2] == 0x60)
 						parseState114(canbuf);
+                        printf("parseState114(canbuf)\n");
 					break;
 
 				case MOTOR114_START_ID:
 					startMotor();
 					break;
-					printf("flag6\n");
+					//printf("flag6\n");
+
+
 				}
 
 			}
 
-			printf("flag7\n");
+			//printf("flag7\n");
 			g_tCan_Rx_Header.StdId=0;
 			g_tCan_Rx_Header.ExtId=0;
 			CanId = 0;

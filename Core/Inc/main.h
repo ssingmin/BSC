@@ -71,10 +71,10 @@ void Error_Handler(void);
 #define USS_Data2_Pin GPIO_PIN_9
 #define USS_Data2_GPIO_Port GPIOD
 #define USS_Data2_EXTI_IRQn EXTI9_5_IRQn
-#define Rsig_Pin GPIO_PIN_12
-#define Rsig_GPIO_Port GPIOD
-#define Gsig_Pin GPIO_PIN_13
+#define Gsig_Pin GPIO_PIN_12
 #define Gsig_GPIO_Port GPIOD
+#define Rsig_Pin GPIO_PIN_13
+#define Rsig_GPIO_Port GPIOD
 #define Bsig_Pin GPIO_PIN_14
 #define Bsig_GPIO_Port GPIOD
 #define USS_Trigger5_Pin GPIO_PIN_6
