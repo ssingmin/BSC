@@ -284,6 +284,7 @@ void controlMotor()
 {
     static int count = 0;
     printf("motor_sw=%d, motor_break=%d\n", motor_sw, motor_break);
+    printf("cmd_motor_rpm_left=%d, cmd_motor_rpm_right=%d\n", (int)motor->cmd_motor_rpm_left, (int)motor->cmd_motor_rpm_right);
     if(motor_sw)
     {
         if(motor_disable_flag)
@@ -324,6 +325,8 @@ void controlMotor()
 
 int toRPM()
 {
+    printf("toRPMtoRPMtoRPMtoRPMtoRPMtoRPMtoRPMtoRPMtoRPMtoRPM\n");
+	printf("toRPM left right: %f %f", motor->cmd_motor_rpm_left , motor->cmd_motor_rpm_right);
     motor->cmd_motor_rpm_right = (60/(2*Math_PI*WHEEL_RADIUS)) * (motor->cmd_v + (WHEEL_DISTANCE/2)*motor->cmd_w);
     motor->cmd_motor_rpm_left = (60/(2*Math_PI*WHEEL_RADIUS)) * (motor->cmd_v - (WHEEL_DISTANCE/2)*motor->cmd_w);
     return 0;
@@ -430,7 +433,6 @@ int stateReady()//이거 전에 ir통신을 받아야 겠는데?
 		HAL_CAN_GetRxMessage(&hcan1, CAN_RX_FIFO0, &g_tCan_Rx_Header, g_uCAN_Rx_Data);
 		if(g_tCan_Rx_Header.ExtId == 6001){
 			check_msg = 1;
-			printf("unlock!!!!unlock!!!!unlock!!!!unlock!!!!\n");
 		}
 
 

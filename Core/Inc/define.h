@@ -214,7 +214,7 @@
 #define MOTOR114_START_ID 0x701
 
 
-typedef struct _MotorInfo
+typedef struct 
 {
     double cmd_motor_rpm_left;
     double cmd_motor_rpm_right;
