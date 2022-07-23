@@ -16,7 +16,7 @@
 #include "led.h"
 #include "ultrasonic.h"
 
-#define debugging 1//must delete 0=debug 1=release
+#define debugging 0//must delete 0=debug 1=release
 
 uint8_t test = 0;
 uint32_t us_Tick = 0;
@@ -26,6 +26,7 @@ uint32_t Tick_100ms = 0;
 uint32_t Tick_500ms = 0;
 
 uint32_t toggle_seq = 0;
+uint32_t state_seq = 0;
 uint32_t cansend_seq = 0;
 uint32_t FDsen_seq = 0;
 
@@ -604,8 +605,9 @@ void spinonce(void)
     ReceiverIR_init();
 #if debugging
     stateReady();
-#endif
     HAL_Delay(10000);
+#endif
+
     //USS_init();
 
 	while(1)
@@ -631,6 +633,7 @@ void spinonce(void)
 		if(Tick_100ms>toggle_seq+5) {		//for monitor iteration.
     		toggle_seq = Tick_100ms;
     		HAL_GPIO_TogglePin(REDtest_GPIO_Port, REDtest_Pin);
+
     		printf("redtest\n");
     	}
 
@@ -647,14 +650,15 @@ void spinonce(void)
     		if((reqmotor_seq%8) == 0){reqEnc();}
     		else{reqState();}
     	}
-		if(Tick_100ms>toggle_seq+9) {
-    		toggle_seq = Tick_100ms;
+		if(Tick_100ms>state_seq+9) {
+			state_seq = Tick_100ms;
         	stateIdle();
+
     		stateThread();
     	}
 
 
-		if((Tick_100ms>sendsensor_seq+2)){
+		if((Tick_100ms>sendsensor_seq+5)){
 			sendsensor_seq = Tick_100ms;
 			//for(int i=1;i<7;i++){printf("sonic test %d  ", USSn_DataRead(i));}	printf("\n");
 			//printf("sonic test %d\n", USSn_DataRead(4));
