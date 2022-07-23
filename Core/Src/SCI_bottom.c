@@ -75,7 +75,7 @@ int check_msg;
 
 
 
-MotorInfo *motor;
+MotorInfo motor;
 extern uint8_t testflag;
 extern uint8_t rx_data[2];
 
@@ -284,7 +284,7 @@ void controlMotor()
 {
     static int count = 0;
     printf("motor_sw=%d, motor_break=%d\n", motor_sw, motor_break);
-    printf("cmd_motor_rpm_left=%d, cmd_motor_rpm_right=%d\n", (int)motor->cmd_motor_rpm_left, (int)motor->cmd_motor_rpm_right);
+    printf("cmd_motor_rpm_left=%d, cmd_motor_rpm_right=%d\n", (int)motor.cmd_motor_rpm_left, (int)motor.cmd_motor_rpm_right);
     if(motor_sw)
     {
         if(motor_disable_flag)
@@ -294,7 +294,7 @@ void controlMotor()
         }
         if(motor_break == 1)
         {
-            control((int)motor->cmd_motor_rpm_left,(int)motor->cmd_motor_rpm_right);
+            control((int)motor.cmd_motor_rpm_left,(int)motor.cmd_motor_rpm_right);
             motor_break = 2;
             count = 0;
             printf("motor_break==1\n");
@@ -302,7 +302,7 @@ void controlMotor()
         else if(motor_break == 2)
         {
             count++;
-            control((int)motor->cmd_motor_rpm_left,(int)motor->cmd_motor_rpm_right);
+            control((int)motor.cmd_motor_rpm_left,(int)motor.cmd_motor_rpm_right);
             if(count == 20)
                 motor_break = 3;
             printf("motor_break==2\n");
@@ -326,9 +326,9 @@ void controlMotor()
 int toRPM()
 {
     printf("toRPMtoRPMtoRPMtoRPMtoRPMtoRPMtoRPMtoRPMtoRPMtoRPM\n");
-	printf("toRPM left right: %f %f", motor->cmd_motor_rpm_left , motor->cmd_motor_rpm_right);
-    motor->cmd_motor_rpm_right = (60/(2*Math_PI*WHEEL_RADIUS)) * (motor->cmd_v + (WHEEL_DISTANCE/2)*motor->cmd_w);
-    motor->cmd_motor_rpm_left = (60/(2*Math_PI*WHEEL_RADIUS)) * (motor->cmd_v - (WHEEL_DISTANCE/2)*motor->cmd_w);
+	printf("toRPM left right: %f %f", motor.cmd_motor_rpm_left , motor.cmd_motor_rpm_right);
+    motor.cmd_motor_rpm_right = (60/(2*Math_PI*WHEEL_RADIUS)) * (motor.cmd_v + (WHEEL_DISTANCE/2)*motor.cmd_w);
+    motor.cmd_motor_rpm_left = (60/(2*Math_PI*WHEEL_RADIUS)) * (motor.cmd_v - (WHEEL_DISTANCE/2)*motor.cmd_w);
     return 0;
 }
 
@@ -337,9 +337,9 @@ void parseCmdvel(uint8_t *msg)
     /*cmd_v lower/cmd_v upper/cmd_w lower/cmd_w upper/ x / x / x / x */
     int16_t temp;
     temp = ((int16_t)msg[0]|(int16_t)msg[1]<<8);
-    motor->cmd_v = (double)temp/SIGNIFICANT_FIGURES;
+    motor.cmd_v = (double)temp/SIGNIFICANT_FIGURES;
     temp = ((int16_t)msg[2]|(int16_t)msg[3]<<8);
-    motor->cmd_w = (double)temp/SIGNIFICANT_FIGURES;
+    motor.cmd_w = (double)temp/SIGNIFICANT_FIGURES;
     motor_sw = msg[4];
     toRPM();
     motor_break = 1;
@@ -353,13 +353,13 @@ void sendEnc(int id)
     char packit[8];
     int index=0;
 
-    packit[index++]= ((int16_t)(motor->real_v*SIGNIFICANT_FIGURES)) & 0xff;
-    packit[index++]= ((int16_t)(motor->real_v*SIGNIFICANT_FIGURES))>>8 & 0xff;
-    packit[index++]= ((int16_t)(motor->real_w*SIGNIFICANT_FIGURES)) & 0xff;
-    packit[index++]= ((int16_t)(motor->real_w*SIGNIFICANT_FIGURES))>>8 & 0xff;
+    packit[index++]= ((int16_t)(motor.real_v*SIGNIFICANT_FIGURES)) & 0xff;
+    packit[index++]= ((int16_t)(motor.real_v*SIGNIFICANT_FIGURES))>>8 & 0xff;
+    packit[index++]= ((int16_t)(motor.real_w*SIGNIFICANT_FIGURES)) & 0xff;
+    packit[index++]= ((int16_t)(motor.real_w*SIGNIFICANT_FIGURES))>>8 & 0xff;
     packit[index++]= (sensor_state->motor[1]<<1) | sensor_state->motor[0];
-    packit[index++]= motor->RCURR * 100;
-    packit[index++]= motor->LCURR * 100;
+    packit[index++]= motor.RCURR * 100;
+    packit[index++]= motor.LCURR * 100;
     packit[index++]=0;
 
     sendCan(id, packit, 8, 1);//test
@@ -369,11 +369,11 @@ void sendEnc(int id)
 int toVW(void)
 {
 
-    motor->real_motor_rpm_left=(double)motor->LRPM;
-    motor->real_motor_rpm_right=(double)motor->RRPM;
+    motor.real_motor_rpm_left=(double)motor.LRPM;
+    motor.real_motor_rpm_right=(double)motor.RRPM;
 
-    motor->real_v = (motor->real_motor_rpm_left+motor->real_motor_rpm_right)*(Math_PI*WHEEL_RADIUS/60);
-    motor->real_w = (motor->real_motor_rpm_right-motor->real_motor_rpm_left)*((Math_PI*WHEEL_RADIUS)/(30*WHEEL_DISTANCE));
+    motor.real_v = (motor.real_motor_rpm_left+motor.real_motor_rpm_right)*(Math_PI*WHEEL_RADIUS/60);
+    motor.real_w = (motor.real_motor_rpm_right-motor.real_motor_rpm_left)*((Math_PI*WHEEL_RADIUS)/(30*WHEEL_DISTANCE));
     return 0;
 }
 
@@ -384,9 +384,9 @@ void parseEnc(uint8_t *msg)
     if(msg[0]==PID_PNT_MONITOR)
     {
 
-        motor->LRPM=((int16_t)msg[2] | ((int16_t)msg[3]<<8));
-        motor->RRPM=((int16_t)msg[5] | ((int16_t)msg[6]<<8));
-        motor->LRPM=-1*(motor->LRPM);
+        motor.LRPM=((int16_t)msg[2] | ((int16_t)msg[3]<<8));
+        motor.RRPM=((int16_t)msg[5] | ((int16_t)msg[6]<<8));
+        motor.LRPM=-1*(motor.LRPM);
         sensor_state->motor[0] = msg[1];
         sensor_state->motor[1] = msg[4];
 
@@ -394,11 +394,11 @@ void parseEnc(uint8_t *msg)
     }
     else if(msg[0]==PID_MAIN_DATA)
     {
-        motor->RCURR=((int16_t)msg[4] | ((int16_t)msg[5]<<8))/10.0;
+        motor.RCURR=((int16_t)msg[4] | ((int16_t)msg[5]<<8))/10.0;
     }
     else if(msg[0]==PID_MAIN_DATA2)
     {
-        motor->LCURR=((int16_t)msg[4] | ((int16_t)msg[5]<<8))/10.0;
+        motor.LCURR=((int16_t)msg[4] | ((int16_t)msg[5]<<8))/10.0;
     }
 }
 
@@ -408,8 +408,8 @@ void parseEnc114(uint8_t *msg)
         lrpm = (int16_t)msg[4] | ((int16_t)msg[5]<<8);
         rrpm = (int16_t)msg[6] | ((int16_t)msg[7]<<8);
 
-        motor->LRPM = (-lrpm) / 10.0;
-        motor->RRPM = (rrpm) / 10.0;
+        motor.LRPM = (-lrpm) / 10.0;
+        motor.RRPM = (rrpm) / 10.0;
 
         toVW();
 }

@@ -8,11 +8,11 @@
 ../Core/Src/SCI_bottom.c:270:6:parseState	16	static
 ../Core/Src/SCI_bottom.c:283:6:controlMotor	16	static
 ../Core/Src/SCI_bottom.c:326:5:toRPM	24	static
-../Core/Src/SCI_bottom.c:335:6:parseCmdvel	32	static
+../Core/Src/SCI_bottom.c:335:6:parseCmdvel	24	static
 ../Core/Src/SCI_bottom.c:350:6:sendEnc	40	static
-../Core/Src/SCI_bottom.c:369:5:toVW	16	static
-../Core/Src/SCI_bottom.c:381:6:parseEnc	24	static
-../Core/Src/SCI_bottom.c:405:6:parseEnc114	32	static
+../Core/Src/SCI_bottom.c:369:5:toVW	8	static
+../Core/Src/SCI_bottom.c:381:6:parseEnc	16	static
+../Core/Src/SCI_bottom.c:405:6:parseEnc114	24	static
 ../Core/Src/SCI_bottom.c:417:6:parseState114	16	static
 ../Core/Src/SCI_bottom.c:429:5:stateReady	8	static
 ../Core/Src/SCI_bottom.c:486:6:stateThread	8	static
