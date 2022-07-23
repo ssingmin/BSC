@@ -75,22 +75,22 @@ static void MX_ADC1_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-/////for printf, must declare in main.c/////
-//int _write(int file, char *ptr, int len)
-//{
-//	HAL_UART_Transmit(&huart1, (uint8_t *)ptr, (uint16_t)len, 100);
-//	return (len);
-//}
-
-
+///for printf, must declare in main.c/////
 int _write(int file, char *ptr, int len)
 {
-	for(int i = 0; i < len; i++)
-	{
-		ITM_SendChar(*ptr++);
-	}
-	return len;
+	HAL_UART_Transmit(&huart1, (uint8_t *)ptr, (uint16_t)len, 100);
+	return (len);
 }
+
+
+//int _write(int file, char *ptr, int len)
+//{
+//	for(int i = 0; i < len; i++)
+//	{
+//		ITM_SendChar(*ptr++);
+//	}
+//	return len;
+//}
 
 
 uint8_t rx_data[5]={0,};

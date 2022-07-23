@@ -260,7 +260,7 @@ void tick(void) {
                     TIR_work.state = TIR_Idle;
                     //ticker.detach();
                     HAL_TIM_Base_Stop_IT (&htim9);//uss timer, 1779hz
-                    HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);//이걸로 수신시작할 것
+                    HAL_NVIC_EnableIRQ(EXTI0_IRQn);//이걸로 수신시작할 것
                 }
             } else if (TIR_data.format == AEHA) {
                 /*

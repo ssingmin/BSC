@@ -75,7 +75,8 @@ void sendCan(uint32_t ID, uint8_t *buf, uint8_t len, uint8_t ext)
     {
         dwCheck = HAL_CAN_AddTxMessage(&hcan1, &tCan_Tx_Header, buf, &dwTxMailBox);
         if(dwCheck != HAL_OK){while(1){;}}
-        printf("cansend\n");
+        printf("canid:%u  buf:%d %d %d %d %d %d %d %d \n",
+        		ID , buf[0], buf[1], buf[2], buf[3], buf[4], buf[5], buf[6], buf[7]);
     }
 }
 

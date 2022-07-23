@@ -16,7 +16,7 @@
 #include "led.h"
 #include "ultrasonic.h"
 
-#define debugging 0//must delete 0=debug 1=release
+#define debugging 1//must delete 0=debug 1=release
 
 uint8_t test = 0;
 uint32_t us_Tick = 0;
@@ -157,6 +157,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)//sequence timer. gen
   if(htim->Instance == TIM14)//IR NEC timer, 1Mhz
   {
 	  IR_NEC_Tick+=4;
+	  HAL_GPIO_TogglePin(BLUEtest_GPIO_Port, BLUEtest_Pin);
   }
 }
 
@@ -165,31 +166,37 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
     if(GPIO_Pin == USS_Data1_Pin) {
     	USS_end[0] = us_Tick;
+    	printf("HAL_TIM_Base_Stop_IT (&htim5)\n");
     	HAL_TIM_Base_Stop_IT (&htim5);//uss timer, 200khz
     }
 
     if(GPIO_Pin == USS_Data2_Pin) {
     	USS_end[1] = us_Tick;
+    	printf("HAL_TIM_Base_Stop_IT (&htim5)\n");
     	HAL_TIM_Base_Stop_IT (&htim5);//uss timer, 200khz
     }
 
     if(GPIO_Pin == USS_Data3_Pin) {
     	//USS_end[2] = us_Tick;
+    	printf("HAL_TIM_Base_Stop_IT (&htim5)\n");
     	HAL_TIM_Base_Stop_IT (&htim5);//uss timer, 200khz
     }
 
     if(GPIO_Pin == USS_Data4_Pin) {
     	USS_end[3] = us_Tick;
+    	printf("HAL_TIM_Base_Stop_IT (&htim5)\n");
     	HAL_TIM_Base_Stop_IT (&htim5);//uss timer, 200khz
     }
 
     if(GPIO_Pin == USS_Data5_Pin) {
     	USS_end[4] = us_Tick;
+    	printf("HAL_TIM_Base_Stop_IT (&htim5)\n");
     	HAL_TIM_Base_Stop_IT (&htim5);//uss timer, 200khz
     }
 
     if(GPIO_Pin == USS_Data6_Pin) {
     	//USS_end[5] = us_Tick;
+    	printf("HAL_TIM_Base_Stop_IT (&htim5)\n");
     	HAL_TIM_Base_Stop_IT (&htim5);//uss timer, 200khz
     }
 
@@ -429,7 +436,7 @@ int stateReady()//이거 전에 ir통신을 받아야 겠는데?
 		{
 			sendIRdata(robot_standby);
 			ir_count = 0;
-			//HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);//이걸로 수신시작할 것
+			HAL_NVIC_EnableIRQ(EXTI0_IRQn);//이걸로 수신시작할 것
 		}
 
 		if(start_docking_flag)
@@ -440,6 +447,9 @@ int stateReady()//이거 전에 ir통신을 받아야 겠는데?
 		   start_docking_flag = 0;
 		   //mutex.lock();
 		   check_msg = 0;
+		   printf("init_state()\n");
+           init_state();
+           HAL_NVIC_DisableIRQ(EXTI0_IRQn);
 		   return 1;
 		   //mutex.unlock();
 		}
@@ -603,9 +613,15 @@ void spinonce(void)
 
 	TransmitterIR_init();
     ReceiverIR_init();
+
+    //check_msg = 1;///must remove only debugging
+
 #if debugging
     stateReady();
     HAL_Delay(10000);
+
+#else
+    ready_flag = 1;
 #endif
 
     //USS_init();
@@ -616,14 +632,14 @@ void spinonce(void)
 
 		if(Tick_100ms>FDsen_seq+10) {		//for monitor iteration.
 			FDsen_seq = Tick_100ms;
-
+			printf("flag8\n");
 		    for(int i=0;i<4;i++){
 		    	HAL_ADC_Start(&hadc1);
 				HAL_ADC_PollForConversion(&hadc1, 100);
 				FDval[i] = HAL_ADC_GetValue(&hadc1);
 		    }
 		    HAL_ADC_Stop(&hadc1);
-
+		    printf("flag9\n");
 		  //printf("FDval: %d %d %d %d\n", FDval[0], FDval[1], FDval[2], FDval[3]);
 		  //HAL_Delay(100);
 
@@ -653,13 +669,15 @@ void spinonce(void)
 		if(Tick_100ms>state_seq+9) {
 			state_seq = Tick_100ms;
         	stateIdle();
-
+        	//turnOn(white);
     		stateThread();
+
     	}
 
 
 		if((Tick_100ms>sendsensor_seq+5)){
 			sendsensor_seq = Tick_100ms;
+			printf("flag1\n");
 			//for(int i=1;i<7;i++){printf("sonic test %d  ", USSn_DataRead(i));}	printf("\n");
 			//printf("sonic test %d\n", USSn_DataRead(4));
 
@@ -687,8 +705,17 @@ void spinonce(void)
 //			HAL_GPIO_WritePin(USS_Trigger1_GPIO_Port, USS_Trigger1_Pin, RESET);
 
 			//////////////////////////////////////////////
-			if(sendsensor_seq%2==1){for(int i=1;i<7;i+=2){buf[i] = USSn_DataRead(i);}}
-			else {for(int i=2;i<7;i+=2){buf[i] = USSn_DataRead(i);}}
+			if(sendsensor_seq%2==1){
+				for(int i=1;i<7;i+=2){
+				buf[i-1] = USSn_DataRead(i);
+				printf("flag111\n");
+				}
+			}
+			else {for(int i=2;i<7;i+=2){
+				buf[i-1] = USSn_DataRead(i);printf("flag211\n");
+			}
+			}
+
 //			buf[0] = USSn_DataRead(1);
 //			buf[1] = USSn_DataRead(2);
 //			buf[1] = 30;
@@ -703,27 +730,33 @@ void spinonce(void)
 //			buf[index++] = 0;
 //			buf[index++] = 0;
 			buf[6] = inhome << 1;
-
+			printf("flag11\n");
 			for(int i=0; i<4;i++){
 				if(FDval[i]>50){buf[index] |= 1<<i+4;}
 				else {buf[index] |= 0<<i+4;}
 			}
 			//buf[index] = 0;
+			printf("flag12\n");
 			sendCan(CANID4, buf, 8, 1);//test
+			printf("flag13\n");
 			index = 0;
-
+			printf("flag2\n");
 		}
 
 		if(FLAG_RxCplt>0){
+			printf("flag3\n");
     		for(int i=0;i<8;i++){canbuf[i] = g_uCAN_Rx_Data[i];}
     		FLAG_RxCplt--;
 			if(g_tCan_Rx_Header.StdId>g_tCan_Rx_Header.ExtId){CanId = g_tCan_Rx_Header.StdId;}
 			else {CanId = g_tCan_Rx_Header.ExtId;}
 			if(CanId==1001){printf("canid1001 ready: %d\n", ready_flag);}
+			printf("canid ready: %d\n", ready_flag);
 			if(ready_flag)
 			{
+				printf("flag4\n");
 				switch(CanId)
 				{
+				printf("flag5\n");
 				case CANID1:
 					parseCmdvel(canbuf);
 					printf("parseCmdvel\n");
@@ -731,6 +764,7 @@ void spinonce(void)
 
 				case CANID2:
 					parseState(canbuf);
+					printf("parseState\n");
 					break;
 
 				case CANID5:
@@ -756,10 +790,12 @@ void spinonce(void)
 				case MOTOR114_START_ID:
 					startMotor();
 					break;
+					printf("flag6\n");
 				}
+
 			}
 
-
+			printf("flag7\n");
 			g_tCan_Rx_Header.StdId=0;
 			g_tCan_Rx_Header.ExtId=0;
 			CanId = 0;

@@ -24,7 +24,7 @@ void sendIRdata(uint8_t send_data[])
     if(TIR_getState() == Idle)
     {
         //ir_rx->evt.disable_irq();
-    	HAL_NVIC_DisableIRQ(EXTI15_10_IRQn);//초음파랑 꼬여있음...풀것...
+    	HAL_NVIC_DisableIRQ(EXTI0_IRQn);
         setData(NEC, send_data, 32);
         //ir_rx->evt.enable_irq();
     }
@@ -53,10 +53,9 @@ int checkIRdata()
 
     for(int i = 0; i<4; i++)
     {
-    	printf("\nhi11: ");
         if(recv_buf[i] == start_docking[i]) {start_docking_count++;}
         if(recv_buf[i] == finish_docking[i]) {finish_docking_count++;}
-        printf("%x : %x\n", recv_buf[i], start_docking[i]);
+        printf("%x : %x    ", recv_buf[i], start_docking[i]);
         printf("!!start_docking_count: %d\n", start_docking_count);
     }
 
@@ -70,6 +69,5 @@ int checkIRdata()
         return 2;
     }
 
-    printf("hihihihi22222\n");
         return 0;
 }

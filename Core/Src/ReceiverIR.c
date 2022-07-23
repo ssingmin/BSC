@@ -74,7 +74,7 @@ int getData(Format *format, uint8_t *buf, int bitlength) {
     for (int i = 0; i < nbytes; i++) {
         buf[i] = data.buffer[i];
     }
-
+    printf("getData init_state()getData init_state()getData init_state()");
     init_state();
 
     UNLOCK();
@@ -90,8 +90,8 @@ void init_state(void) {
     work.state = Idle;
     data.format = UNKNOWN;
     data.bitcount = 0;
-    HAL_TIM_Base_Stop_IT(&htim14);//printf("HAL_TIM_Base_Stop_IT\n");  //timer.stop();
-    //HAL_NVIC_DisableIRQ(EXTI15_10_IRQn); //input interrupt stop
+    HAL_TIM_Base_Stop_IT(&htim14);printf("HAL_TIM_Base_Stop_IT(&htim14)\n");  //timer.stop();
+    //HAL_NVIC_DisableIRQ(EXTI0_IRQn); //input interrupt stop
     IR_NEC_Tick = 0;  //timer.reset();
     for (int i = 0; i < sizeof(data.buffer); i++) {
         data.buffer[i] = 0;
@@ -131,7 +131,7 @@ void isr_fall(void) {
         case Idle:
             if (work.c1 < 0) {
             	//printf("222\n");
-            	HAL_TIM_Base_Start_IT (&htim14);//printf("HAL_TIM_Base_Start_IT\n");  //timer.start();
+            	HAL_TIM_Base_Start_IT (&htim14);//printf("HAL_TIM_Base_Start_IT (&htim14)\n");  //timer.start();
                 work.c1 = IR_NEC_Tick;  //timer.read_us();
             } else {
             	//printf("333\n");
@@ -180,7 +180,7 @@ void isr_fall(void) {
                     work.d1 = -1;
                     work.d2 = -1;
                 } else {
-                    init_state();
+                    init_state();//HAL_GPIO_TogglePin(Rsig_GPIO_Port, Rsig_Pin);
                 }
             }
             break;
@@ -269,11 +269,11 @@ void isr_rise(void) {
                 } else {
                     static const int MINIMUM_LEADER_WIDTH = 150;
                     if (a < MINIMUM_LEADER_WIDTH) {
-                        init_state();
+                        init_state();//HAL_GPIO_TogglePin(Gsig_GPIO_Port, Gsig_Pin);
                     }
                 }
             } else {
-                init_state();
+                init_state();//HAL_GPIO_TogglePin(Bsig_GPIO_Port, Bsig_Pin);
             }
             break;
         case Receiving:
@@ -336,7 +336,7 @@ void isr_timeout(void) {
 #endif
     if (work.state == Receiving) {
         work.state = Received;
-        HAL_NVIC_DisableIRQ(EXTI15_10_IRQn); //input interrupt stop
+        HAL_NVIC_DisableIRQ(EXTI0_IRQn); //input interrupt stop
         isr_timeout_flag = 0;
   		isr_timeout_counter = 0;
         work.c1 = -1;
