@@ -16,7 +16,7 @@
 #include "led.h"
 #include "ultrasonic.h"
 
-#define debugging 1//must delete 0=debug 1=release
+#define debugging 1//must delete 1=debug 0=release
 
 uint8_t test = 0;
 uint32_t us_Tick = 0;
@@ -39,10 +39,9 @@ uint8_t isr_timeout_flag = 0;
 
 
 uint32_t CTLcansend_seq = 0;
-
 uint32_t sendsensor_seq = 0;
-
 uint32_t controlmotor_seq = 0;
+uint8_t sensor_seq_count = 0;
 
 uint32_t reqmotor_seq = 0;
 uint8_t reqmotor_toggle = 0;
@@ -122,7 +121,7 @@ int ir_count_idle = 0;
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)//sequence timer. generate per 1ms
 {
-  if(htim->Instance == TIM5)//uss timer, 100khz
+  if(htim->Instance == TIM5)//uss timer, 10khz
   {
 	  us_Tick++;
 //	  if(us_Tick>0xffff0000){us_Tick=0;}
@@ -139,8 +138,8 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)//sequence timer. gen
 
   if(htim->Instance == TIM7)//uss timer, 1khz
   {
-	  USS_tick++;
-	  if(USS_tick>0xffff0000){USS_tick=0;}
+//	  USS_tick++;
+//	  if(USS_tick>0xffff0000){USS_tick=0;}
   }
 
   if(htim->Instance == TIM9)//uss timer, 1779hz
@@ -158,7 +157,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)//sequence timer. gen
   if(htim->Instance == TIM14)//IR NEC timer, 1Mhz
   {
 	  IR_NEC_Tick+=4;
-	  HAL_GPIO_TogglePin(BLUEtest_GPIO_Port, BLUEtest_Pin);
+	  //HAL_GPIO_TogglePin(BLUEtest_GPIO_Port, BLUEtest_Pin);
   }
 }
 
@@ -167,38 +166,40 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
     if(GPIO_Pin == USS_Data1_Pin) {
     	USS_end[0] = us_Tick;
-    	printf("HAL_TIM_Base_Stop_IT (&htim5)\n");
-    	HAL_TIM_Base_Stop_IT (&htim5);//uss timer, 200khz
+    	//printf("USS_end[0]: %d\n", USS_end[0]);
+    	//printf("HAL_TIM_Base_Stop_IT (&htim5)\n");
+    	//HAL_TIM_Base_Stop_IT (&htim5);//uss timer, 200khz
     }
 
     if(GPIO_Pin == USS_Data2_Pin) {
     	USS_end[1] = us_Tick;
-    	printf("HAL_TIM_Base_Stop_IT (&htim5)\n");
-    	HAL_TIM_Base_Stop_IT (&htim5);//uss timer, 200khz
+    	//printf("USS_end[1]: %d\n", USS_end[1]);
+    	//printf("HAL_TIM_Base_Stop_IT (&htim5)\n");
+    	//HAL_TIM_Base_Stop_IT (&htim5);//uss timer, 200khz
     }
 
     if(GPIO_Pin == USS_Data3_Pin) {
-    	//USS_end[2] = us_Tick;
-    	printf("HAL_TIM_Base_Stop_IT (&htim5)\n");
-    	HAL_TIM_Base_Stop_IT (&htim5);//uss timer, 200khz
+    	USS_end[2] = us_Tick;
+    	//printf("HAL_TIM_Base_Stop_IT (&htim5)\n");
+    	//HAL_TIM_Base_Stop_IT (&htim5);//uss timer, 200khz
     }
 
     if(GPIO_Pin == USS_Data4_Pin) {
     	USS_end[3] = us_Tick;
-    	printf("HAL_TIM_Base_Stop_IT (&htim5)\n");
-    	HAL_TIM_Base_Stop_IT (&htim5);//uss timer, 200khz
+    	//printf("HAL_TIM_Base_Stop_IT (&htim5)\n");
+    	//HAL_TIM_Base_Stop_IT (&htim5);//uss timer, 200khz
     }
 
     if(GPIO_Pin == USS_Data5_Pin) {
     	USS_end[4] = us_Tick;
-    	printf("HAL_TIM_Base_Stop_IT (&htim5)\n");
-    	HAL_TIM_Base_Stop_IT (&htim5);//uss timer, 200khz
+    	//printf("HAL_TIM_Base_Stop_IT (&htim5)\n");
+    	//HAL_TIM_Base_Stop_IT (&htim5);//uss timer, 200khz
     }
 
     if(GPIO_Pin == USS_Data6_Pin) {
-    	//USS_end[5] = us_Tick;
-    	printf("HAL_TIM_Base_Stop_IT (&htim5)\n");
-    	HAL_TIM_Base_Stop_IT (&htim5);//uss timer, 200khz
+    	USS_end[5] = us_Tick;
+    	//printf("HAL_TIM_Base_Stop_IT (&htim5)\n");
+    	//HAL_TIM_Base_Stop_IT (&htim5);//uss timer, 200khz
     }
 
 
@@ -283,12 +284,13 @@ void parseState(uint8_t *msg)
 void controlMotor()
 {
     static int count = 0;
-    printf("motor_sw=%d, motor_break=%d\n", motor_sw, motor_break);
-    printf("cmd_motor_rpm_left=%d, cmd_motor_rpm_right=%d\n", (int)motor.cmd_motor_rpm_left, (int)motor.cmd_motor_rpm_right);
+   // printf("motor_sw=%d, motor_break=%d\n", motor_sw, motor_break);
+    //printf("cmd_motor_rpm_left=%d, cmd_motor_rpm_right=%d\n", (int)motor.cmd_motor_rpm_left, (int)motor.cmd_motor_rpm_right);
     if(motor_sw)
     {
         if(motor_disable_flag)
-        {printf("enable\n");
+        {
+        	//printf("enable\n");
             enable();
             motor_disable_flag = 0;
         }
@@ -297,7 +299,7 @@ void controlMotor()
             control((int)motor.cmd_motor_rpm_left,(int)motor.cmd_motor_rpm_right);
             motor_break = 2;
             count = 0;
-            printf("motor_break==1\n");
+        //    printf("motor_break==1\n");
         }
         else if(motor_break == 2)
         {
@@ -305,11 +307,11 @@ void controlMotor()
             control((int)motor.cmd_motor_rpm_left,(int)motor.cmd_motor_rpm_right);
             if(count == 20)
                 motor_break = 3;
-            printf("motor_break==2\n");
+        //    printf("motor_break==2\n");
         }
         else if(motor_break == 3)
         {
-        	printf("motor_break==3\n");
+        //	printf("motor_break==3\n");
             control(0,0);
             count = 0;
         }
@@ -318,15 +320,15 @@ void controlMotor()
     {
         disable();
         motor_disable_flag = 1;
-        printf("disable==1\n");
+     //   printf("disable==1\n");
     }
 }
 
 
 int toRPM()
 {
-    printf("toRPMtoRPMtoRPMtoRPMtoRPMtoRPMtoRPMtoRPMtoRPMtoRPM\n");
-	printf("toRPM left right: %f %f", motor.cmd_motor_rpm_left , motor.cmd_motor_rpm_right);
+//    printf("toRPMtoRPMtoRPMtoRPMtoRPMtoRPMtoRPMtoRPMtoRPMtoRPM\n");
+//	printf("toRPM left right: %f %f", motor.cmd_motor_rpm_left , motor.cmd_motor_rpm_right);
     motor.cmd_motor_rpm_right = (60/(2*Math_PI*WHEEL_RADIUS)) * (motor.cmd_v + (WHEEL_DISTANCE/2)*motor.cmd_w);
     motor.cmd_motor_rpm_left = (60/(2*Math_PI*WHEEL_RADIUS)) * (motor.cmd_v - (WHEEL_DISTANCE/2)*motor.cmd_w);
     return 0;
@@ -486,7 +488,7 @@ int stateReady()//이거 전에 ir통신을 받아야 겠는데?
 void stateThread()
 {
 
-	printf("stateThread, robot_state: %d\n", robot_state);
+	//printf("stateThread, robot_state: %d\n", robot_state);
         switch(robot_state)
         {
             case INIT:
@@ -626,15 +628,14 @@ void spinonce(void)
 	TransmitterIR_init();
     ReceiverIR_init();
 
-    //check_msg = 1;///must remove only debugging
-
 #if debugging
+    check_msg = 1;///must remove only debugging
+    ready_flag = 1;
+#endif
     stateReady();
     HAL_Delay(1000);
 
-#else
-    ready_flag = 1;
-#endif
+
 
     //USS_init();
 
@@ -663,7 +664,7 @@ void spinonce(void)
     		HAL_GPIO_TogglePin(REDtest_GPIO_Port, REDtest_Pin);
     		stateIdle();
     		stateThread();
-    		printf("redtest\n");
+    		//printf("redtest\n");
     	}
 
     	if(gTick>controlmotor_seq+4) {		//about controlmotor do it!!!!!
@@ -676,9 +677,9 @@ void spinonce(void)
     	if(gTick>reqmotor_seq+3) {		//REQ MOTOR
     		reqmotor_seq = gTick;
     		reqmotor_toggle ^= 1;
-    		printf("reqmotor_seq: %d\n", reqmotor_seq);
-    		if(reqmotor_toggle){reqEnc();printf("reqEnc() ");}
-    		else{reqState();printf("reqState()\n");}
+    		//printf("reqmotor_seq: %d\n", reqmotor_seq);
+    		if(reqmotor_toggle){reqEnc();/*printf("reqEnc() ");*/}
+    		else{reqState();/*printf("reqState()\n");*/}
     	}
 //		if(Tick_100ms>state_seq+7) {
 //			state_seq = Tick_100ms;
@@ -691,6 +692,7 @@ void spinonce(void)
 
 		if((Tick_100ms>sendsensor_seq+5)){
 			sendsensor_seq = Tick_100ms;
+			sensor_seq_count ^= 1;
 			//printf("flag1\n");
 			//for(int i=1;i<7;i++){printf("sonic test %d  ", USSn_DataRead(i));}	printf("\n");
 			//printf("sonic test %d\n", USSn_DataRead(4));
@@ -719,15 +721,24 @@ void spinonce(void)
 //			HAL_GPIO_WritePin(USS_Trigger1_GPIO_Port, USS_Trigger1_Pin, RESET);
 
 			//////////////////////////////////////////////
-			if(sendsensor_seq%2==1){
-				for(int i=1;i<7;i+=2){
-				buf[i-1] = USSn_DataRead(i);
-				//printf("flag111\n");
-				}
+			if(sensor_seq_count){
+//				for(int i=1;i<7;i+=2){
+//				buf[i-1] = USSn_DataRead(i);
+
+//				}
+				//printf("flag1111111111111\n");
+				buf[0] = USSn_DataRead(1);
+				buf[2] = USSn_DataRead(3);
+				buf[4] = USSn_DataRead(5);;
 			}
-			else {for(int i=2;i<7;i+=2){
-				buf[i-1] = USSn_DataRead(i);//printf("flag211\n");
-			}
+			else {
+//					for(int i=2;i<7;i+=2){
+//					buf[i-1] = USSn_DataRead(i);//printf("flag211\n");
+//					}
+				//printf("flag22222222222222\n");
+				buf[1] = USSn_DataRead(2);
+				buf[3] = USSn_DataRead(4);
+				buf[5] = USSn_DataRead(6);
 			}
 
 //			buf[0] = USSn_DataRead(1);
@@ -746,11 +757,12 @@ void spinonce(void)
 			buf[6] = inhome << 1;
 			//printf("flag11\n");
 			for(int i=0; i<4;i++){
-				if(FDval[i]>50){buf[index] |= 1<<i+4;}
-				else {buf[index] |= 0<<i+4;}
+				if(FDval[i]>50){buf[7] |= 1<<i+4;}
+				else {buf[7] |= 0<<i+4;}
 			}
 			//buf[index] = 0;
 			//printf("flag12\n");
+			printf("sendcan: %d %d %d %d %d %d %d %d \n", buf[0], buf[1], buf[2], buf[3], buf[4], buf[5], buf[6], buf[7] );
 			sendCan(CANID4, buf, 8, 1);//test
 			//printf("flag13\n");
 			index = 0;
@@ -797,10 +809,10 @@ void spinonce(void)
 
 					if(canbuf[1] == 0x6c && canbuf[2] == 0x60)
 						parseEnc114(canbuf);
-                        printf("parseEnc114(canbuf)\n");
+                        //printf("parseEnc114(canbuf)\n");
 					if(canbuf[1] == 0x3f && canbuf[2] == 0x60)
 						parseState114(canbuf);
-                        printf("parseState114(canbuf)\n");
+                        //printf("parseState114(canbuf)\n");
 					break;
 
 				case MOTOR114_START_ID:
