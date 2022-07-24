@@ -17,4 +17,4 @@
 ../Core/Src/SCI_bottom.c:431:5:stateReady	8	static
 ../Core/Src/SCI_bottom.c:488:6:stateThread	8	static
 ../Core/Src/SCI_bottom.c:565:6:stateIdle	8	static
-../Core/Src/SCI_bottom.c:604:6:spinonce	96	static
+../Core/Src/SCI_bottom.c:604:6:spinonce	56	static

@@ -690,7 +690,7 @@ void spinonce(void)
 //    	}
 
 
-		if((Tick_100ms>sendsensor_seq+5)){
+		if((Tick_100ms>sendsensor_seq+4)){
 			sendsensor_seq = Tick_100ms;
 			sensor_seq_count ^= 1;
 			//printf("flag1\n");
@@ -756,16 +756,21 @@ void spinonce(void)
 //			buf[index++] = 0;
 			buf[6] = inhome << 1;
 			//printf("flag11\n");
+			//printf("FDval[1]: %d\n", FDval[1]);
 			for(int i=0; i<4;i++){
-				if(FDval[i]>50){buf[7] |= 1<<i+4;}
-				else {buf[7] |= 0<<i+4;}
+				if(FDval[i]>150){
+					buf[7] |= 1<<i+4;
+					//printf("FDval[i]: %d\n", FDval[i]);
+				}
+				//else {buf[7] |= 0<<i+4;}
 			}
 			//buf[index] = 0;
 			//printf("flag12\n");
-			printf("sendcan: %d %d %d %d %d %d %d %d \n", buf[0], buf[1], buf[2], buf[3], buf[4], buf[5], buf[6], buf[7] );
+			//printf("sendcan: %d %d %d %d %d %d %d %d \n", buf[0], buf[1], buf[2], buf[3], buf[4], buf[5], buf[6], buf[7] );
 			sendCan(CANID4, buf, 8, 1);//test
 			//printf("flag13\n");
-			index = 0;
+			//index = 0;
+			buf[7]=0;
 			//printf("flag2\n");
 		}
 
@@ -775,7 +780,7 @@ void spinonce(void)
     		FLAG_RxCplt--;
 			if(g_tCan_Rx_Header.StdId>g_tCan_Rx_Header.ExtId){CanId = g_tCan_Rx_Header.StdId;}
 			else {CanId = g_tCan_Rx_Header.ExtId;}
-			if(CanId==1001){printf("canid1001 ready: %d\n", ready_flag);}
+			//if(CanId==1001){printf("canid1001 ready: %d\n", ready_flag);}
 			//printf("canid ready: %d\n", ready_flag);
 			if(ready_flag)
 			{
@@ -785,12 +790,12 @@ void spinonce(void)
 				//printf("flag5\n");
 				case CANID1:
 					parseCmdvel(canbuf);
-					printf("parseCmdvel\n");
+					//printf("parseCmdvel\n");
 					break;
 
 				case CANID2:
 					parseState(canbuf);
-					printf("parseState\n");
+					//printf("parseState\n");
 					break;
 
 				case CANID5:

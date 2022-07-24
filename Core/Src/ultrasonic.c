@@ -23,7 +23,7 @@
 #define USS6_Trigger_ReSet HAL_GPIO_WritePin(USS_Trigger6_GPIO_Port, USS_Trigger6_Pin, RESET)
 
 
-
+//harness pin map change 3<<>>4
 extern TIM_HandleTypeDef htim5;
 
 int32_t USS_start[6] = {0,};
@@ -130,7 +130,7 @@ uint8_t USSn_DataRead(int USSn)
 	USS_calc -= (0.042*(double)USS_tmp)*(1*(double)USS_tmp)*(0.001*(double)USS_tmp);//x^3, (0.0361*10^-6)*x^3
 	//printf("4: %f \n", USS_calc);
 
-	printf("USS_calc:%d USS_tmp:%d end:%d start:%d USS%d\n", (uint8_t)USS_calc, USS_tmp, USS_end[USSn-1], USS_start[USSn-1], USSn);
+	//printf("USS_calc:%d USS_tmp:%d end:%d start:%d USS%d\n", (uint8_t)USS_calc, USS_tmp, USS_end[USSn-1], USS_start[USSn-1], USSn);
 	//USS_calc[0]=(USS_end[0]-USS_start[0]);
 	//printf("USS_calc[0]: %d \n", USS_calc);
 	//printf("sonic value start, end, diff: %d  %d  %d\n", USS_start[0], USS_end[0], (USS_end[0]-USS_start[0]));
