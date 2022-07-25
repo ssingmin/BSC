@@ -16,7 +16,7 @@
 #include "led.h"
 #include "ultrasonic.h"
 
-#define debugging 1//must delete 1=debug 0=release
+#define debugging 0//must delete 1=debug 0=release
 
 uint8_t test = 0;
 uint32_t us_Tick = 0;
@@ -299,7 +299,7 @@ void controlMotor()
             control((int)motor.cmd_motor_rpm_left,(int)motor.cmd_motor_rpm_right);
             motor_break = 2;
             count = 0;
-        //    printf("motor_break==1\n");
+            printf("motor_break==1  %f  %f\n", motor.cmd_motor_rpm_left,motor.cmd_motor_rpm_right);
         }
         else if(motor_break == 2)
         {
@@ -307,13 +307,14 @@ void controlMotor()
             control((int)motor.cmd_motor_rpm_left,(int)motor.cmd_motor_rpm_right);
             if(count == 20)
                 motor_break = 3;
-        //    printf("motor_break==2\n");
+            printf("motor_break==2  %f  %f\n", motor.cmd_motor_rpm_left,motor.cmd_motor_rpm_right);
         }
         else if(motor_break == 3)
         {
         //	printf("motor_break==3\n");
             control(0,0);
             count = 0;
+            printf("control(0,0); \n");
         }
     }
     else
